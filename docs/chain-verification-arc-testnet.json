@@ -1,0 +1,28 @@
+{
+  "network": "arc-testnet",
+  "checkedAt": "2026-10-28T00:05:37.317Z",
+  "rpcVia": "public-fallback",
+  "head": "69412895",
+  "results": [
+    {
+      "id": "chain-id",
+      "ok": true,
+      "detail": "eth_chainId=5042002, expected 5042002"
+    },
+    {
+      "id": "usdc-erc20",
+      "ok": true,
+      "detail": "code=present, decimals=6, symbol=USDC"
+    },
+    {
+      "id": "native-emitter",
+      "ok": true,
+      "detail": "796 system Transfer logs in blocks 69412745-69412895 (inconclusive if 0: widen the window)"
+    },
+    {
+      "id": "double-log",
+      "ok": true,
+      "detail": "518/518 ERC-20 Transfer txs also carry a system log (inconclusive if 0)"
+    }
+  ]
+}
