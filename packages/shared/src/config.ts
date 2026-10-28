@@ -86,6 +86,8 @@ const workerShape = {
   ARC_RPC_FALLBACK_URLS: z.string().optional(),
   /** Required on the very first run when payment intents already exist (never scan from block 0). */
   SCANNER_START_BLOCK: z.coerce.bigint().nonnegative().optional(),
+  /** Block the distributor was deployed in. Bounds the search for an existing settlement during crash recovery. */
+  DISTRIBUTOR_DEPLOY_BLOCK: z.coerce.bigint().nonnegative().optional(),
   SCAN_INTERVAL_MS: int(1000, 120_000, 10_000),
   KEEPER_INTERVAL_MS: int(500, 60_000, 3_000),
   RECONCILE_INTERVAL_MS: int(1000, 300_000, 15_000),

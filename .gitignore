@@ -11,3 +11,5 @@ broadcast
 *.log
 console.jsonl
 traces.jsonl
+acqui/
+contracts/contract-metadata/*.json

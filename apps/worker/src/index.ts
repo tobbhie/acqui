@@ -91,7 +91,7 @@ async function main(): Promise<void> {
   const evalCtx: EvalCtx = { db, chainId: network.chainId, recoveryDelaySeconds: contracts.recoveryDelaySeconds, log, now };
   const keeperCtx: KeeperCtx = {
     db, chain: keeperChain, attester, alerts, log, now, sleep,
-    contracts: { chainId: network.chainId, distributor: contracts.distributor, usdc: contracts.usdc, recoveryDelaySeconds: contracts.recoveryDelaySeconds },
+    contracts: { chainId: network.chainId, distributor: contracts.distributor, usdc: contracts.usdc, recoveryDelaySeconds: contracts.recoveryDelaySeconds, deployBlock: config.DISTRIBUTOR_DEPLOY_BLOCK },
     config: { CONFIRMATIONS: config.CONFIRMATIONS, MIN_KEEPER_BALANCE_WEI: minBalanceWei, STUCK_SETTLEMENT_ALERT_SECONDS: config.STUCK_SETTLEMENT_ALERT_SECONDS },
   };
   const states: Record<string, LoopState> = {};

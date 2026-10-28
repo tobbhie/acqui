@@ -11,6 +11,13 @@
 7. **Next.js vs Vite.** Arc Studio's sandbox runs Vite + React. Keep the SPA or port to Next.js later.
 8. **Folder mapping.** `contracts/` stays the Foundry root instead of `packages/contracts`.
 
+## Resolved by the testnet deployment
+
+- **Fee Safe**: 0x78b96a800a3a6cd349cb2b0016148F20621cd00F (testnet). Confirm the mainnet Safe separately before you deploy.
+- **Reimbursement**: 0.02 USDC covers the measured settlement gas on testnet (about 0.011 to 0.013 USDC at the time). Gas prices can move, so re-measure before mainnet.
+- **Native deposits** are confirmed live: one system log, no ERC-20 log. ERC-20 transfers produce both.
+- **Still open**: attester key custody for mainnet, blocklisted refund address policy, refund address at checkout, Google credentials.
+
 ## Decided in Step 05 (tell me if you disagree)
 
 - **Vite instead of Next.js.** Arc Studio runs Vite, so the app is one static single page app. Checkout is routed by host (`checkout.` serves only `/pay/{id}`). Everything the spec needs from Next.js (routes, host routing) works the same; there is no server rendering. Say so if you need a Next.js port for submission.

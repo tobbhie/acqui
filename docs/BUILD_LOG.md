@@ -57,3 +57,6 @@ Done:
 
 Not done: the app is a Vite single page app (not Next.js). Nothing was run against a deployed distributor, no real payment was made through the UI, and mainnet remains locked.
 Next: Step 06 mainnet testing and submission.
+
+## Testnet deployment and live validation
+Distributor deployed to Arc Testnet and verified against the chain by the API and worker. Native-send and ERC-20 settlements, replay refusal, overpayment recovery and fee collection checked live, plus a full API to worker to settled run. See docs/DEPLOYMENTS.md. Mainnet untouched.

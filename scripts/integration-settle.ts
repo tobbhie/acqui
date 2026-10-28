@@ -164,7 +164,9 @@ async function main(): Promise<void> {
   check('merchant received net amount', (await bal(usdc, merchant)) - before.merchant === net, `net=${net}`);
   const gasUsdc = arc ? (settleReceipt.gasUsed * settleReceipt.effectiveGasPrice) / NATIVE_PER_USDC_UNIT : 0n;
   const keeperDelta = (await bal(usdc, accounts.keeper.address)) - before.keeper;
-  check('keeper received reimbursement (net of gas on Arc)', keeperDelta === REIMBURSEMENT - gasUsdc,
+  // Gas is debited in 18-decimal native units and the ERC-20 view truncates to 6 decimals, so allow one unit of rounding.
+  const expectedDelta = REIMBURSEMENT - gasUsdc;
+  check('keeper received reimbursement (net of gas on Arc)', keeperDelta >= expectedDelta - 1n && keeperDelta <= expectedDelta + 1n,
     `reimbursement=${REIMBURSEMENT}, gasUsdc=${gasUsdc}, delta=${keeperDelta}, reimbursementCoversGas=${REIMBURSEMENT >= gasUsdc}`);
   check('distributor holds exactly the protocol fee', (await bal(usdc, dist)) === fee, `fee=${fee}`);
   check('receiver emptied of invoice amount', (await bal(usdc, receiver)) === 0n);
