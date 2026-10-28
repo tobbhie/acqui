@@ -9,3 +9,5 @@ contracts/out
 contracts/cache
 broadcast
 *.log
+console.jsonl
+traces.jsonl
