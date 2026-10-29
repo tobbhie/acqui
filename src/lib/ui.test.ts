@@ -15,7 +15,7 @@ void describe('checkout phases come only from server status', () => {
 
   void it('stops polling only when nothing more can change, and slows down for refunds', () => {
     assert.equal(pollIntervalMs('settled'), false)
-    assert.equal(pollIntervalMs('expired'), false)
+    assert.equal(pollIntervalMs('expired'), 15_000)
     assert.equal(pollIntervalMs('awaiting'), 4000)
     assert.equal(pollIntervalMs('settling'), 4000)
     assert.equal(pollIntervalMs('recovery'), 15_000)

@@ -11,6 +11,7 @@ import { checkoutPhase, pollIntervalMs, remainingMs, statusTone, PHASE_LABEL, ty
 import { formatCountdown } from '@/lib/format'
 import type { PublicPayment, PublicStatus } from '@/lib/types'
 import { usePageMeta } from '@/lib/meta'
+import { formatUsdc, parseUsdc } from '@/onchain-money'
 
 /** Hosted checkout. Reads the database-backed public API only: the browser never queries the chain. */
 export function Pay({ publicId }: { publicId: string }) {
@@ -75,6 +76,7 @@ export function Pay({ publicId }: { publicId: string }) {
   const successUrl = safeHttpUrl(p.success_url)
   const cancelUrl = safeHttpUrl(p.cancel_url)
   const open = phase === 'awaiting' && remaining > 0
+  const partial = phase === 'observed' && parseUsdc(received) < parseUsdc(p.amount) && remaining > 0
 
   return (
     <CheckoutFrame>
@@ -105,9 +107,9 @@ export function Pay({ publicId }: { publicId: string }) {
         <Steps phase={phase} />
       </div>
 
-      {open && (
+      {(open || partial) && (
         <p className="mt-6 flex items-center justify-between rounded-2xl bg-[var(--surface-muted)] px-4 py-3 text-sm">
-          <span className="text-[var(--ink-2)]">Time left to pay</span>
+          <span className="text-[var(--ink-2)]">Time left to {partial ? 'complete payment' : 'pay'}</span>
           <span role="timer" aria-live="off" className="display text-xl font-semibold tabular-nums">{formatCountdown(remaining)}</span>
         </p>
       )}
@@ -118,6 +120,7 @@ export function Pay({ publicId }: { publicId: string }) {
           payment={p}
           received={received}
           open={open}
+          partial={partial}
           networkName={networkName}
           settlementHash={settlement?.tx_hash ?? null}
           successUrl={successUrl}
@@ -141,13 +144,17 @@ function PhaseBody(props: {
   payment: PublicPayment
   received: string
   open: boolean
+  partial: boolean
   networkName: string
   settlementHash: string | null
   successUrl: string | null
   cancelUrl: string | null
 }) {
   const { phase, payment, received, networkName, settlementHash, successUrl, cancelUrl } = props
-  const hasReceived = Number(received) > 0
+  const receivedUnits = parseUsdc(received)
+  const amountUnits = parseUsdc(payment.amount)
+  const hasReceived = receivedUnits > 0n
+  const excessUnits = receivedUnits > amountUnits ? receivedUnits - amountUnits : 0n
 
   if (phase === 'awaiting') {
     return props.open ? (
@@ -160,9 +167,21 @@ function PhaseBody(props: {
   }
 
   if (phase === 'observed') {
+    if (props.partial) {
+      const remainingAmount = formatUsdc(amountUnits - receivedUnits)
+      return (
+        <div className="space-y-4">
+          <Alert tone="warning" title="Payment incomplete — send the remainder before time runs out">
+            We received {received} of {payment.amount} USDC. Send the remaining {remainingAmount} USDC to the same address before the countdown reaches zero.
+          </Alert>
+          <PayInstructions payment={payment} networkName={networkName} />
+        </div>
+      )
+    }
     return (
       <Alert tone="info" title="We can see your payment">
         {received} USDC arrived. We are checking it before the merchant is paid. This usually takes a few seconds.
+        {excessUnits > 0n && ` This is ${formatUsdc(excessUnits)} USDC more than requested; the excess is returned to the payment's refund address after settlement.`}
       </Alert>
     )
   }
@@ -183,6 +202,11 @@ function PhaseBody(props: {
         <Alert tone="success" title="Payment settled">
           The merchant has been paid onchain. This order is complete.
         </Alert>
+        {excessUnits > 0n && (
+          <Alert tone="info" title="Overpayment detected">
+            We received {received} USDC for a {payment.amount} USDC payment. The excess {formatUsdc(excessUnits)} USDC will be returned onchain through the refund process to the refund address committed when this checkout was created.
+          </Alert>
+        )}
         <div className="flex flex-wrap gap-2">
           {link && (
             <LinkButton href={link} external variant="secondary">
@@ -204,6 +228,7 @@ function PhaseBody(props: {
         <Alert tone="warning" title="This payment has expired">
           Do not send funds to this address. Go back to the merchant to start a new payment: it gets a new address.
           {hasReceived && ' We saw a transfer to this address. It will be handled through the refund process.'}
+          {!hasReceived && ' If you submitted a transfer before the countdown ended, keep this page open while we finish checking the chain. An on-time payment can still be confirmed after the display timer reaches zero.'}
         </Alert>
         {(cancelUrl ?? successUrl) && <LinkButton href={(cancelUrl ?? successUrl) as string} variant="secondary">Return to merchant</LinkButton>}
       </div>

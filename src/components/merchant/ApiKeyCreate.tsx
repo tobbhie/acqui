@@ -12,14 +12,17 @@ export function ApiKeyCreate({ initialLabel = 'Production server', onCreated }: 
   const [secret, setSecret] = useState<string | null>(null)
   const create = useMutation({
     mutationFn: () => api<ApiKeyInfo & { secret: string }>('/v1/merchant/api-keys', { method: 'POST', body: { label: label.trim() } }),
-    onSuccess: async (key) => {
+    onSuccess: (key) => {
       setSecret(key.secret)
-      await qc.invalidateQueries({ queryKey: ['api-keys'] })
     },
   })
 
   if (secret) {
-    return <SecretReveal title="Your API key" secret={secret} onDone={() => { setSecret(null); onCreated?.() }} />
+    return <SecretReveal title="Your API key" secret={secret} onDone={() => {
+      setSecret(null)
+      void qc.invalidateQueries({ queryKey: ['api-keys'] })
+      onCreated?.()
+    }} />
   }
   return (
     <div className="space-y-3">

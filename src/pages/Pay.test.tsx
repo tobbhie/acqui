@@ -55,9 +55,24 @@ void describe('hosted checkout rendering', () => {
     assert.ok(!settled.includes('Time left to pay'))
   })
 
+  void it('keeps the deadline and payment instructions visible for a partial on-time payment', () => {
+    const partial = render({ status: 'deposit_detected', received: '6.00' })
+    for (const needle of ['Time left to complete payment', 'Payment incomplete', '6.00 of 10.00', 'remaining 4', RECEIVER, 'Copy address']) {
+      assert.ok(partial.includes(needle), `missing ${needle}`)
+    }
+  })
+
+  void it('discloses an overpayment and its refund after successful settlement', () => {
+    const settled = render({ status: 'settled', received: '12.50' })
+    for (const needle of ['Payment settled', 'Overpayment detected', '12.50 USDC', '10.00 USDC', 'excess 2.5 USDC', 'returned onchain']) {
+      assert.ok(settled.includes(needle), `missing ${needle}`)
+    }
+  })
+
   void it('explains expired, underpaid and refund states without suggesting more payment', () => {
     const expired = render({ status: 'expired' })
     assert.ok(expired.includes('This payment has expired') && !expired.includes(RECEIVER))
+    assert.ok(expired.includes('submitted a transfer before the countdown ended'))
     const under = render({ status: 'underpaid', received: '6.00' })
     assert.ok(under.includes('Payment incomplete') && under.includes('6.00 of 10.00'))
     assert.ok(render({ status: 'recovery_required' }).includes('Refund in progress'))

@@ -25,13 +25,13 @@ export function checkoutPhase(status: PaymentStatus): CheckoutPhase {
   }
 }
 
-/** Statuses after which nothing more will change for the customer. */
-export const isFinalPhase = (phase: CheckoutPhase): boolean => phase === 'settled' || phase === 'expired'
+/** Only settlement is permanently final. Expired payments may still change when an on-time deposit is indexed late. */
+export const isFinalPhase = (phase: CheckoutPhase): boolean => phase === 'settled'
 
 /** Poll quickly while money may be in flight, slowly once only recovery remains. */
 export function pollIntervalMs(phase: CheckoutPhase): number | false {
   if (isFinalPhase(phase)) return false
-  return phase === 'underpaid' || phase === 'recovery' ? 15_000 : 4_000
+  return phase === 'underpaid' || phase === 'recovery' || phase === 'expired' ? 15_000 : 4_000
 }
 
 export const PHASE_LABEL: Record<PaymentStatus, string> = {
