@@ -72,7 +72,7 @@ export function demoRoutes(deps: AppDeps): Hono<HonoEnv> {
     c.header('Cache-Control', 'no-store');
   });
 
-  app.get('/products', (c) => c.json({ enabled: Boolean(deps.config.DEMO_MERCHANT_API_KEY), products: DEMO_PRODUCTS.map(({ id, name, blurb, price }) => ({ id, name, blurb, price })) }));
+  app.get('/products', (c) => c.json({ enabled: Boolean(deps.config.DEMO_MERCHANT_API_KEY), return_origin: webBase, products: DEMO_PRODUCTS.map(({ id, name, blurb, price }) => ({ id, name, blurb, price })) }));
 
   app.post('/orders', async (c) => {
     const key = deps.config.DEMO_MERCHANT_API_KEY;
@@ -104,6 +104,10 @@ export function demoRoutes(deps: AppDeps): Hono<HonoEnv> {
       await deps.db`UPDATE demo_orders SET status = 'failed', updated_at = now() WHERE id = ${orderId}`;
       const upstream = z.object({ error: z.object({ code: z.string() }) }).safeParse(json);
       const code = upstream.success ? upstream.data.error.code : 'unknown';
+      if (code === 'return_origin_not_configured' || code === 'return_origin_not_allowed') {
+        throw new ApiError(503, 'demo_return_origin_mismatch',
+          `The demo merchant's return origin must be exactly ${webBase} (origin only, no path). Set it in the merchant dashboard under Settings.`);
+      }
       throw new ApiError(503, 'payments_unavailable', `Payments are unavailable right now (${code})`);
     }
     const payment = upstreamPayment.parse(json);

@@ -111,6 +111,20 @@ void describe('demo store backend', () => {
     void testContracts;
   });
 
+  void it('tells the operator exactly which return origin the demo merchant needs', async () => {
+    await h.db`UPDATE merchants SET allowed_return_origin = NULL`;
+    const missing = await order();
+    assert.equal(missing.status, 503);
+    const err = missing.body.error as { code: string; message: string };
+    assert.equal(err.code, 'demo_return_origin_mismatch');
+    assert.ok(err.message.includes(ORIGIN));
+    await h.db`UPDATE merchants SET allowed_return_origin = 'https://localhost.com'`;
+    assert.equal((await order()).status, 503);
+    await h.db`UPDATE merchants SET allowed_return_origin = ${ORIGIN}`;
+    assert.equal((await order()).status, 201);
+    assert.equal((await h.call('GET', '/demo/products')).body.return_origin, ORIGIN);
+  });
+
   void it('validates input and unknown orders', async () => {
     assert.equal((await order('nope')).status, 422);
     assert.equal((await h.call('POST', '/demo/orders', { body: { product_id: 'sticker-pack', price: '0.01' } })).status, 422);

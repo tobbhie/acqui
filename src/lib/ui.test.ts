@@ -1,7 +1,7 @@
 // arc-studio-allow-onchain-literal (test fixtures only)
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { formatCountdown, looksLikeAddress, safeHttpUrl, sanitizeText, shortAddress, txUrl } from './format'
+import { formatCountdown, looksLikeAddress, safeHttpUrl, sanitizeText, shortAddress, toOrigin, txUrl } from './format'
 import { checkoutPhase, isFinalPhase, pollIntervalMs, remainingMs, statusTone } from './status'
 import type { PaymentStatus } from './types'
 
@@ -66,5 +66,14 @@ void describe('display helpers', () => {
   void it('builds explorer links for known chains and returns null for unknown ones', () => {
     assert.match(txUrl(5042002, `0x${'ab'.repeat(32)}`) ?? '', /\/tx\/0xabab/)
     assert.equal(txUrl(999999, `0x${'ab'.repeat(32)}`), null)
+  })
+
+  void it('cuts a pasted page URL down to its origin', () => {
+    assert.equal(toOrigin('https://localhost.com/demo'), 'https://localhost.com')
+    assert.equal(toOrigin('https://shop.example.com/a/b?x=1#y'), 'https://shop.example.com')
+    assert.equal(toOrigin('http://localhost:5173/demo'), 'http://localhost:5173')
+    assert.equal(toOrigin('shop.example.com/cart'), 'https://shop.example.com')
+    assert.equal(toOrigin('javascript:alert(1)'), null)
+    assert.equal(toOrigin('   '), null)
   })
 })

@@ -58,3 +58,19 @@ export function formatWhen(iso: string | null | undefined): string {
 
 /** True for a plausible 0x EVM address. The API validates for real; this only guards the form. */
 export const looksLikeAddress = (value: string): boolean => /^0x[0-9a-fA-F]{40}$/.test(value.trim())
+
+/**
+ * The origin of whatever the merchant pasted (scheme, host and port, no path, query or fragment),
+ * or null if it is not an http(s) URL. Return origins are compared exactly, so a pasted page URL is cut down to this.
+ */
+export function toOrigin(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`)
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null
+    return url.origin
+  } catch {
+    return null
+  }
+}

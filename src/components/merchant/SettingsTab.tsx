@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Alert, Button, Field } from '@/components/ui'
+import { ReturnOriginField } from '@/components/merchant/ReturnOriginField'
+import { toOrigin } from '@/lib/format'
 import { api } from '@/lib/api'
 import { addressUrl, looksLikeAddress } from '@/lib/format'
 import { errorMessage, usePublicConfig } from '@/lib/hooks'
@@ -14,7 +16,7 @@ export function SettingsTab({ merchant }: { merchant: MerchantSettings }) {
   const [origin, setOrigin] = useState(merchant.allowed_return_origin ?? '')
   const [next, setNext] = useState('')
   const save = useMutation({
-    mutationFn: () => api('/v1/merchant', { method: 'PATCH', body: { display_name: name.trim(), allowed_return_origin: origin.trim() || null } }),
+    mutationFn: () => api('/v1/merchant', { method: 'PATCH', body: { display_name: name.trim(), allowed_return_origin: toOrigin(origin) ?? (origin.trim() || null) } }),
     onSuccess: () => refreshMerchant(qc),
   })
   const change = useMutation({ mutationFn: () => api<{ expires_at: string }>('/v1/merchant/payout-address/change', { method: 'POST', body: { new_address: next.trim() } }) })
@@ -26,8 +28,7 @@ export function SettingsTab({ merchant }: { merchant: MerchantSettings }) {
       <form onSubmit={submit} className="space-y-4">
         <h2 className="display text-xl font-semibold">Business</h2>
         <Field id="s-name" label="Business name" value={name} minLength={2} maxLength={80} onChange={(e) => setName(e.target.value)} hint="Shown to customers on checkout." />
-        <Field id="s-origin" label="Return origin" placeholder="https://shop.example.com" inputMode="url" value={origin} onChange={(e) => setOrigin(e.target.value)}
-          hint="Success and cancel URLs must be on this origin. Leave empty to disallow return links." />
+        <ReturnOriginField id="s-origin" value={origin} onChange={setOrigin} />
         {save.isError && <Alert tone="danger">{errorMessage(save.error)}</Alert>}
         {save.isSuccess && <Alert tone="success">Saved.</Alert>}
         <Button type="submit" busy={save.isPending}>Save</Button>
