@@ -1,9 +1,9 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { describeConfig, getNetwork } from '@acqui/shared';
 import type { AppDeps, HonoEnv } from './context';
-import { clientIp, rateKey } from './http';
+import { allowedOrigins, clientIp, rateKey } from './http';
 import { errorHandler } from './lib/errors';
 import { FixedWindowLimiter, rateLimit } from './lib/rate-limit';
 import { authRoutes } from './routes/auth';
@@ -23,16 +23,16 @@ export const DEFAULT_LIMITS: Limits = { perIpPerMinute: 300, perKeyPerMinute: 12
 export function createApp(deps: AppDeps, limits: Limits = DEFAULT_LIMITS): Hono<HonoEnv> {
   const app = new Hono<HonoEnv>();
   const trustProxy = deps.config.TRUST_PROXY === 'true';
+  const ipOf = (c: Context) => clientIp(c, trustProxy, deps.config.PROXY_SHARED_SECRET);
   const clock = () => deps.now().getTime();
   const ipLimiter = new FixedWindowLimiter(limits.perIpPerMinute, 60_000, clock);
   const keyLimiter = new FixedWindowLimiter(limits.perKeyPerMinute, 60_000, clock);
   const authLimiter = new FixedWindowLimiter(limits.authPerIpPerMinute, 60_000, clock);
   const demoLimiter = new FixedWindowLimiter(limits.demoOrdersPerIpPerMinute, 60_000, clock);
-  const demoOrderLimit = rateLimit(demoLimiter, (c) => `demo:${clientIp(c, trustProxy)}`);
+  const demoOrderLimit = rateLimit(demoLimiter, (c) => `demo:${ipOf(c)}`);
 
-  const origins = new Set(
-    [deps.config.DASHBOARD_BASE_URL, deps.config.CHECKOUT_BASE_URL].flatMap((u) => (u ? [new URL(u).origin] : [])),
-  );
+  // Browser origins that may call the API with credentials: the website(s) plus any configured extras (such as previews).
+  const origins = allowedOrigins(deps);
 
   app.onError(errorHandler);
   app.notFound((c) => c.json({ error: { code: 'not_found', message: 'Not found' } }, 404));
@@ -44,13 +44,23 @@ export function createApp(deps: AppDeps, limits: Limits = DEFAULT_LIMITS): Hono<
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     maxAge: 600,
   }));
-  app.use('*', rateLimit(ipLimiter, (c) => `ip:${clientIp(c, trustProxy)}`));
-  app.use('/v1/payment-intents/*', rateLimit(keyLimiter, (c) => rateKey(c, clientIp(c, trustProxy))));
-  app.use('/v1/payment-intents', rateLimit(keyLimiter, (c) => rateKey(c, clientIp(c, trustProxy))));
-  app.use('/v1/payments', rateLimit(keyLimiter, (c) => rateKey(c, clientIp(c, trustProxy))));
+  app.use('*', rateLimit(ipLimiter, (c) => `ip:${ipOf(c)}`));
+  app.use('/v1/payment-intents/*', rateLimit(keyLimiter, (c) => rateKey(c, ipOf(c))));
+  app.use('/v1/payment-intents', rateLimit(keyLimiter, (c) => rateKey(c, ipOf(c))));
+  app.use('/v1/payments', rateLimit(keyLimiter, (c) => rateKey(c, ipOf(c))));
 
   // Only order creation is limited tightly; status polling is covered by the global per-IP limit.
   app.post('/demo/orders', demoOrderLimit);
+
+  // Readiness: can this instance reach its database? Liveness stays /health, which needs no dependencies.
+  app.get('/ready', async (c) => {
+    try {
+      await deps.db`SELECT 1`;
+      return c.json({ ok: true });
+    } catch {
+      return c.json({ ok: false, error: 'database_unreachable' }, 503);
+    }
+  });
 
   app.get('/health', (c) => {
     const net = getNetwork(deps.config.ACQUI_NETWORK);

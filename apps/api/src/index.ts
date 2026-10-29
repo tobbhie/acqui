@@ -66,7 +66,23 @@ async function main(): Promise<void> {
   }
 
   const app = createApp(deps);
-  serve({ fetch: app.fetch, port: config.PORT }, (info) => console.log(`acqui-api listening on :${info.port}`));
+  // 0.0.0.0 so the platform's load balancer can reach the container, not only localhost.
+  const server = serve({ fetch: app.fetch, port: config.PORT, hostname: '0.0.0.0' }, (info) => console.log(`acqui-api listening on ${info.address}:${info.port}`));
+
+  // Orchestrators send SIGTERM and then SIGKILL after a grace period. Stop accepting connections, let in-flight
+  // requests finish, close the database pool, and exit cleanly. A second signal or a stuck request forces the exit.
+  let stopping = false;
+  const shutdown = (signal: string): void => {
+    if (stopping) process.exit(1);
+    stopping = true;
+    console.log(`${signal} received, shutting down`);
+    setTimeout(() => { console.error('shutdown timed out'); process.exit(1); }, 25_000).unref();
+    server.close(() => {
+      void db.end({ timeout: 5 }).finally(() => process.exit(0));
+    });
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 main().catch((error: unknown) => {

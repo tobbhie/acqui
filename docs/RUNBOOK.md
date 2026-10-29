@@ -5,7 +5,7 @@ One worker process runs three loops. It is safe to restart at any time: every st
 ## Run it
 
 ```bash
-bun run worker:dev      # same command on Railway: bun run apps/worker/src/index.ts
+bun run worker:dev      # same command in the container: bun run apps/worker/src/index.ts
 ```
 
 Run exactly one replica. A PostgreSQL session advisory lock enforces this: a second copy logs `worker_waiting_for_leader_lock` and does nothing until the first one stops. If the lock connection dies, the process exits so the platform restarts it.

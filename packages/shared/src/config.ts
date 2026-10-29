@@ -66,6 +66,19 @@ const apiShape = {
   DEMO_WEBHOOK_SECRET: z.string().min(20).optional(),
   /** Where the demo server reaches this API. Defaults to http://127.0.0.1:PORT. */
   DEMO_API_BASE_URL: z.string().url().optional(),
+  /** Extra browser origins allowed to call the API with credentials (comma separated, origins only). Added to DASHBOARD_BASE_URL and CHECKOUT_BASE_URL. */
+  CORS_ALLOWED_ORIGINS: z
+    .string()
+    .transform((value) => value.split(',').map((o) => o.trim()).filter(Boolean))
+    .pipe(z.array(z.string().url().refine((o) => new URL(o).origin === o, 'must be an origin without a path')))
+    .optional(),
+  /**
+   * Session cookie SameSite. "lax" is right when the website forwards /api to the API (same origin for the browser).
+   * "none" is only for a website that calls the API directly from another site; it requires production (Secure cookies).
+   */
+  COOKIE_SAME_SITE: z.enum(['lax', 'none']).default('lax'),
+  /** Shared secret that the website's edge function sends so the API can trust the client IP it forwards. */
+  PROXY_SHARED_SECRET: secret32.optional(),
   /** Set to "true" only behind a trusted proxy so X-Forwarded-For can be used for rate limiting. */
   TRUST_PROXY: z.enum(['true', 'false']).default('false'),
 };
@@ -135,6 +148,9 @@ export function loadApiConfig(env: Record<string, string | undefined>): ApiConfi
   if (!parsed.success) throw new ConfigError('api', formatIssues(parsed.error));
   requireProductionRpc('api', parsed.data);
   const d = parsed.data;
+  if (d.COOKIE_SAME_SITE === 'none' && d.NODE_ENV !== 'production') {
+    throw new ConfigError('api', ['COOKIE_SAME_SITE: "none" needs NODE_ENV=production because the cookie must be Secure']);
+  }
   // Payout changes need a working email channel. Oqumail needs only its API key: the sender address is set up in the
   // provider. Plain SMTP needs full credentials plus a From address. Otherwise payout changes stay disabled.
   const smtpReady = Boolean(d.SMTP_HOST && d.SMTP_PORT && d.SMTP_USER && d.SMTP_PASSWORD && d.EMAIL_FROM);

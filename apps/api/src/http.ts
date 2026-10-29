@@ -17,13 +17,24 @@ export const cookieNames = (production: boolean) => ({
   oauth: 'acqui_oauth_state',
 });
 
-export function cookieOptions(production: boolean, maxAgeSeconds: number, path = '/') {
-  return { httpOnly: true, secure: production, sameSite: 'Lax' as const, path, maxAge: maxAgeSeconds };
+export function cookieOptions(production: boolean, maxAgeSeconds: number, path = '/', sameSite: 'Lax' | 'None' = 'Lax') {
+  return { httpOnly: true, secure: production, sameSite, path, maxAge: maxAgeSeconds };
 }
 
-export function clientIp(c: Context, trustProxy: boolean): string {
+/**
+ * Client address for rate limits. Order of trust:
+ * 1. The website's edge function, proven by the shared secret, forwards the visitor's address in X-Acqui-Client-Ip.
+ * 2. Behind a trusted platform proxy, the LAST X-Forwarded-For entry (the one that proxy appended). Earlier entries
+ *    are written by the caller and can be spoofed.
+ * 3. The TCP peer.
+ */
+export function clientIp(c: Context, trustProxy: boolean, proxySecret?: string): string {
+  const presented = c.req.header('x-acqui-proxy-secret');
+  const edgeIp = c.req.header('x-acqui-client-ip')?.trim();
+  if (proxySecret && presented && edgeIp && safeEqualStrings(presented, proxySecret)) return edgeIp;
   if (trustProxy) {
-    const forwarded = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();
+    const parts = c.req.header('x-forwarded-for')?.split(',').map((p) => p.trim()).filter(Boolean);
+    const forwarded = parts && parts.length > 0 ? parts[parts.length - 1] : undefined;
     if (forwarded) return forwarded;
   }
   try {
@@ -59,8 +70,8 @@ export function validate<S extends z.ZodTypeAny>(schema: S, value: unknown): z.i
   return result.data as z.infer<S>;
 }
 
-function allowedOrigins(deps: AppDeps): Set<string> {
-  const origins = new Set<string>();
+export function allowedOrigins(deps: AppDeps): Set<string> {
+  const origins = new Set<string>(deps.config.CORS_ALLOWED_ORIGINS ?? []);
   for (const url of [deps.config.DASHBOARD_BASE_URL, deps.config.CHECKOUT_BASE_URL]) {
     if (url) origins.add(new URL(url).origin);
   }
@@ -98,7 +109,7 @@ export function clearSessionCookie(deps: AppDeps, c: Context): void {
 
 export function setSessionCookie(deps: AppDeps, c: Context, token: string, maxAgeSeconds: number): void {
   const production = deps.config.NODE_ENV === 'production';
-  setCookie(c, cookieNames(production).session, token, cookieOptions(production, maxAgeSeconds));
+  setCookie(c, cookieNames(production).session, token, cookieOptions(production, maxAgeSeconds, '/', deps.config.COOKIE_SAME_SITE === 'none' ? 'None' : 'Lax'));
 }
 
 /** Loads the merchant of the signed-in user. */

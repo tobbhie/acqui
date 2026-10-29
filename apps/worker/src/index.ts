@@ -57,8 +57,24 @@ async function main(): Promise<void> {
       res.writeHead(out.ok ? 200 : 503, { 'content-type': 'application/json' }).end(JSON.stringify(out.body));
     })();
   });
-  // Railway injects PORT for the service; HEALTH_PORT is the fallback for other hosts.
-  server.listen(Number(process.env.PORT) || config.HEALTH_PORT);
+  // Some platforms inject PORT; HEALTH_PORT is the fallback. Bound to 0.0.0.0 so a platform health check can reach it.
+  server.listen(Number(process.env.PORT) || config.HEALTH_PORT, '0.0.0.0');
+
+  const controller = new AbortController();
+  // SIGTERM: stop starting new work, let the tick in progress finish (signed transactions are stored before they are
+  // sent, so a restart resumes them), release the leader lock and close the pool. A second signal or a stuck tick
+  // forces the exit before the platform's SIGKILL.
+  let stopping = false;
+  const stop = (signal: string) => {
+    if (stopping) process.exit(1);
+    stopping = true;
+    log.info('worker_stopping', { signal });
+    setTimeout(() => { log.error('worker_shutdown_timed_out', {}); process.exit(1); }, 25_000).unref();
+    controller.abort();
+    server.close();
+  };
+  process.on('SIGTERM', () => stop('SIGTERM'));
+  process.on('SIGINT', () => stop('SIGINT'));
 
   const db = createDb(config.DATABASE_URL, 8);
   await migrate(db);
@@ -97,10 +113,14 @@ async function main(): Promise<void> {
   const lockConn = await db.reserve();
   phase = 'waiting_for_leader';
   for (;;) {
+    if (controller.signal.aborted) { lockConn.release(); await db.end({ timeout: 5 }); log.info('worker_stopped', { phase: 'waiting_for_leader' }); return; }
     const got = await lockConn<{ ok: boolean }[]>`SELECT pg_try_advisory_lock(${LEADER_LOCK_KEY}) AS ok`;
     if (got[0]?.ok) break;
     log.warn('worker_waiting_for_leader_lock', {});
-    await sleep(10_000);
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 10_000);
+      controller.signal.addEventListener('abort', () => { clearTimeout(timer); resolve(); }, { once: true });
+    });
   }
   setInterval(() => { void lockConn`SELECT 1`.catch(() => { log.error('leader_lock_lost', {}); process.exit(1); }); }, 15_000).unref();
 
@@ -112,7 +132,6 @@ async function main(): Promise<void> {
   };
   const states: Record<string, LoopState> = {};
   const state = (name: string): LoopState => (states[name] = { name, lastSuccessAt: null, consecutiveErrors: 0, lastError: null });
-  const controller = new AbortController();
   const common = { signal: controller.signal, log, alerts, now };
 
   const loops = [
@@ -166,12 +185,10 @@ async function main(): Promise<void> {
   };
   log.info('acqui_worker_started', { chainId: network.chainId, keeper: keeper.address, ...describeConfig(config) });
 
-  const stop = () => { controller.abort(); server.close(); };
-  process.on('SIGTERM', stop);
-  process.on('SIGINT', stop);
   await Promise.all(loops);
   lockConn.release();
   await db.end({ timeout: 5 });
+  log.info('worker_stopped', {});
 }
 
 main().catch((error: unknown) => {

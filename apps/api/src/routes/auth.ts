@@ -14,7 +14,7 @@ export function authRoutes(deps: AppDeps, authLimiter: FixedWindowLimiter): Hono
   const production = deps.config.NODE_ENV === 'production';
   const names = cookieNames(production);
   const dashboard = (deps.config.DASHBOARD_BASE_URL ?? deps.config.CHECKOUT_BASE_URL).replace(/\/+$/, '');
-  const limit = rateLimit(authLimiter, (c) => `auth:${clientIp(c, deps.config.TRUST_PROXY === 'true')}`);
+  const limit = rateLimit(authLimiter, (c) => `auth:${clientIp(c, deps.config.TRUST_PROXY === 'true', deps.config.PROXY_SHARED_SECRET)}`);
 
   app.get('/google/start', limit, async (c) => {
     const { url, flow } = await deps.googleAuth.createAuthorization();

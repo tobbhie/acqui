@@ -10,7 +10,7 @@ A merchant integrates a server-side API and redirects the customer to hosted che
 
 | Planned path | Where it lives now | Notes |
 | --- | --- | --- |
-| apps/web | `src/` (Vite + React) | Arc Studio runs Vite. Moving to Next.js is an open question. |
+| web | `src/` (Vite + React), `functions/`, `edge/` | Static site on Cloudflare Pages plus a Pages Function that forwards `/api/*` to the API. Moving to Next.js is an open question. |
 | apps/api | `apps/api/` | Hono service: Google sign-in, merchant settings, API keys, payment intents, public checkout read model. PostgreSQL via `postgres`, SQL migrations in `apps/api/migrations`. See `docs/API.md`. |
 | apps/worker | `apps/worker/` | Boots and validates config. Monitor, keeper and webhook loops are TODOs. |
 | packages/contracts | `contracts/` (Foundry root) | Arc Studio's contract tooling expects `contracts/`. See `packages/contracts/README.md`. |
