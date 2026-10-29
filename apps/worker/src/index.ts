@@ -45,6 +45,21 @@ async function main(): Promise<void> {
     throw error;
   }
   const network = getNetwork(config.ACQUI_NETWORK);
+
+  // Liveness comes up first so a platform health check passes while migrations run or while a newer deployment waits
+  // for the previous worker to release the leader lock. It reports full loop status once the loops are running.
+  let report: (() => Promise<{ ok: boolean; body: Record<string, unknown> }>) | null = null;
+  let phase: 'starting' | 'waiting_for_leader' | 'running' = 'starting';
+  const server = createServer((req, res) => {
+    void (async () => {
+      if (req.url !== '/health') { res.writeHead(404).end(); return; }
+      const out = report ? await report() : { ok: true, body: { ok: true, phase } };
+      res.writeHead(out.ok ? 200 : 503, { 'content-type': 'application/json' }).end(JSON.stringify(out.body));
+    })();
+  });
+  // Railway injects PORT for the service; HEALTH_PORT is the fallback for other hosts.
+  server.listen(Number(process.env.PORT) || config.HEALTH_PORT);
+
   const db = createDb(config.DATABASE_URL, 8);
   await migrate(db);
 
@@ -80,6 +95,7 @@ async function main(): Promise<void> {
 
   // One active worker at a time: a session advisory lock on a dedicated connection. If it is ever lost, exit and restart.
   const lockConn = await db.reserve();
+  phase = 'waiting_for_leader';
   for (;;) {
     const got = await lockConn<{ ok: boolean }[]>`SELECT pg_try_advisory_lock(${LEADER_LOCK_KEY}) AS ok`;
     if (got[0]?.ok) break;
@@ -135,20 +151,19 @@ async function main(): Promise<void> {
     }),
   ];
 
-  const server = createServer((req, res) => {
-    void (async () => {
-      if (req.url !== '/health') { res.writeHead(404).end(); return; }
-      const cursor = await loadCursor(db, network.chainId).catch(() => null);
-      const body = {
-        ok: Object.values(states).every((s) => s.consecutiveErrors < 3),
-        network: network.id, chainId: network.chainId, loops: states,
+  phase = 'running';
+  report = async () => {
+    const cursor = await loadCursor(db, network.chainId).catch(() => null);
+    const ok = Object.values(states).every((s) => s.consecutiveErrors < 3);
+    return {
+      ok,
+      body: {
+        ok, phase, network: network.id, chainId: network.chainId, loops: states,
         cursor: cursor && { lastBlock: cursor.last_block, watermark: cursor.last_block_timestamp, headBlock: cursor.head_block },
         alerts: alerts.active(),
-      };
-      res.writeHead(body.ok ? 200 : 503, { 'content-type': 'application/json' }).end(JSON.stringify(body));
-    })();
-  });
-  server.listen(config.HEALTH_PORT);
+      },
+    };
+  };
   log.info('acqui_worker_started', { chainId: network.chainId, keeper: keeper.address, ...describeConfig(config) });
 
   const stop = () => { controller.abort(); server.close(); };

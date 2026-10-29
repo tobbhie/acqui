@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+acqui
+.env
+.env.*
+!.env.example
+contracts
+lib
+docs
+scripts
+*.log
+*.jsonl
+**/*.test.ts
+**/*.test.tsx
+.agents
