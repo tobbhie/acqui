@@ -7,12 +7,14 @@ import { safeHttpUrl, txUrl } from '@/lib/format'
 import { usePublicConfig } from '@/lib/hooks'
 import { Link } from '@/lib/route'
 import type { DemoOrder as Order } from '@/lib/types'
+import { usePageMeta } from '@/lib/meta'
 
 /**
  * Where checkout sends the customer back. Arriving here proves nothing: the demo server asks the payments API
  * for the order's real status on every poll and only shows "paid" when that API reports a settled payment.
  */
 export function DemoOrder({ orderId }: { orderId: string }) {
+  usePageMeta({ title: 'Your order | Acqui demo', description: 'Order status in the Acqui demo store.', noindex: true })
   const config = usePublicConfig()
   const order = useQuery({
     queryKey: ['demo-order', orderId],

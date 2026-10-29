@@ -6,6 +6,7 @@ import { api } from '@/lib/api'
 import { errorMessage, usePublicConfig } from '@/lib/hooks'
 import { safeHttpUrl } from '@/lib/format'
 import type { DemoProduct } from '@/lib/types'
+import { usePageMeta } from '@/lib/meta'
 
 interface Catalogue { enabled: boolean; products: DemoProduct[] }
 
@@ -14,6 +15,7 @@ interface Catalogue { enabled: boolean; products: DemoProduct[] }
  * payment. This page never sees a key and never decides that anything was paid.
  */
 export function Demo() {
+  usePageMeta({ title: 'Demo store | Acqui', description: 'Try a USDC checkout end to end: pick an item, pay on the hosted checkout, and watch the order confirm.', path: '/demo' })
   const config = usePublicConfig()
   const catalogue = useQuery({ queryKey: ['demo-products'], queryFn: () => api<Catalogue>('/demo/products') })
   const [pendingId, setPendingId] = useState<string | null>(null)

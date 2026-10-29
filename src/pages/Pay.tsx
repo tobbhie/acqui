@@ -10,9 +10,11 @@ import { errorMessage, useNow } from '@/lib/hooks'
 import { checkoutPhase, pollIntervalMs, remainingMs, statusTone, PHASE_LABEL, type CheckoutPhase } from '@/lib/status'
 import { formatCountdown } from '@/lib/format'
 import type { PublicPayment, PublicStatus } from '@/lib/types'
+import { usePageMeta } from '@/lib/meta'
 
 /** Hosted checkout. Reads the database-backed public API only: the browser never queries the chain. */
 export function Pay({ publicId }: { publicId: string }) {
+  usePageMeta({ title: 'Checkout | Acqui', description: 'Pay with USDC on Arc.', noindex: true })
   const payment = useQuery({
     queryKey: ['public-payment', publicId],
     queryFn: () => api<PublicPayment>(`/public/payments/${publicId}`),

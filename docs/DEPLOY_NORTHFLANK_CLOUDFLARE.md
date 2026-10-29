@@ -105,6 +105,7 @@ Environment variables (Settings -> Environment variables; set them for **Product
 | Name | Type | Value |
 |---|---|---|
 | `BUN_VERSION` | plain text | `1.3.14` (the version of `bun.lock`; Cloudflare's build image supports Bun through this variable) |
+| `SITE_URL` | plain text | `https://<your pages domain>` with no trailing slash. The build uses it for the docs page's canonical link, share tags, `sitemap.xml` and `robots.txt`. Without it the site still works but search engines get no sitemap. |
 | `NODE_VERSION` | plain text | `22` |
 | `API_ORIGIN` | plain text | the API's public HTTPS origin from section 5.1, no path |
 | `PROXY_SHARED_SECRET` | **secret** | same value as `PROXY_SHARED_SECRET` on the API |

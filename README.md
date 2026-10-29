@@ -13,6 +13,10 @@ Built with [Arc Studio](https://studio.arc.io)
 - Contracts: Solidity 0.8.28 with Foundry and OpenZeppelin
 - Network: Arc Testnet only for now
 
+## Pages
+
+The site serves `/` (landing), `/docs` (developer docs, pre-rendered at build time for search engines), `/demo`, `/merchants` and `/pay/{id}` (hosted checkout).
+
 ## Development
 
 Prerequisites: Bun.

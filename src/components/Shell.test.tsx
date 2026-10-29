@@ -21,6 +21,10 @@ void describe('site navigation', () => {
     assert.ok(!html.includes('id="mobile-menu"'), 'menu panel is closed by default')
   })
 
+  void it('lists the docs in the menu', () => {
+    assert.match(render(), /href="\/docs"[^>]*>Docs</)
+  })
+
   void it('shows no navigation on hosted checkout', () => {
     const html = render(true)
     assert.ok(!html.includes('How it works'))

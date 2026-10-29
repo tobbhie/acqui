@@ -19,6 +19,7 @@ import { PaymentCapabilities } from '@/components/PaymentCapabilities'
 import { usePublicConfig } from '@/lib/hooks'
 import { Link, scrollToHash } from '@/lib/route'
 import { CHECKOUT_WINDOW_SECONDS } from '@acqui/shared'
+import { usePageMeta } from '@/lib/meta'
 
 const cta = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]'
 
@@ -75,6 +76,7 @@ function SettlementGraphic() {
 }
 
 export function Landing() {
+  usePageMeta({ title: 'Acqui | Accept USDC payments on Arc with one API', description: 'Create a checkout from your server, let customers pay in USDC on Arc, and get paid straight to your wallet. Hosted checkout, signed webhooks, no wallet connection.', path: '/' })
   const config = usePublicConfig()
   // A link such as /#how-it-works opened directly (or reloaded) lands on its section.
   useEffect(() => {

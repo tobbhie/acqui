@@ -2,6 +2,7 @@ import { Shell, Card } from '@/components/Shell'
 import { usePath } from '@/lib/route'
 import { Landing } from '@/pages/Landing'
 import { Demo } from '@/pages/Demo'
+import { Docs } from '@/pages/Docs'
 import { DemoOrder } from '@/pages/DemoOrder'
 import { Merchants } from '@/pages/Merchants'
 import { Pay } from '@/pages/Pay'
@@ -29,6 +30,7 @@ export default function App() {
   let page
   if (path === '/') page = <Landing />
   else if (path === '/demo') page = <Demo />
+  else if (path === '/docs') page = <Docs />
   else if (demoOrder?.[1]) page = <DemoOrder orderId={demoOrder[1]} />
   else if (path === '/merchants' || path === '/dashboard' || path === '/dashboard/payout/confirm') page = <Merchants />
   else if (pay?.[1]) return <Shell minimal><Pay publicId={pay[1]} /></Shell>

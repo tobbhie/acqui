@@ -9,6 +9,7 @@ const NAV: readonly NavItem[] = [
   { to: '/', label: 'Overview', match: (p) => p === '/' },
   { to: '/#how-it-works', label: 'How it works', match: () => false },
   { to: '/demo', label: 'Demo', match: (p) => p.startsWith('/demo') },
+  { to: '/docs', label: 'Docs', match: (p) => p.startsWith('/docs') },
   { to: '/merchants', label: 'Merchants', match: (p) => p === '/merchants' || p.startsWith('/dashboard') },
 ]
 
@@ -19,7 +20,7 @@ export function Shell({ children, minimal = false }: { children: ReactNode; mini
   const path = usePath()
   const config = usePublicConfig()
   const marketing = path === '/'
-  const frame = marketing ? 'max-w-[1340px]' : 'max-w-5xl'
+  const frame = marketing ? 'max-w-[1340px]' : path.startsWith('/docs') ? 'max-w-6xl' : 'max-w-5xl'
   // Mobile menu: open only for the path it was opened on, so any page change closes it without an effect.
   const [openAt, setOpenAt] = useState<string | null>(null)
   const open = openAt === path

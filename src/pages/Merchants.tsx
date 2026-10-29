@@ -7,9 +7,11 @@ import { Alert, Button, Skeleton } from '@/components/ui'
 import { errorMessage, useSession } from '@/lib/hooks'
 import { useMerchant } from '@/lib/merchant'
 import { usePath } from '@/lib/route'
+import { usePageMeta } from '@/lib/meta'
 
 /** Merchant area: login, onboarding and dashboard. Everything is cookie-session based. */
 export function Merchants() {
+  usePageMeta({ title: 'Merchant dashboard | Acqui', description: 'Manage your Acqui store, API keys, webhooks and payments.', noindex: true })
   const path = usePath()
   const session = useSession()
   const merchant = useMerchant(Boolean(session.data?.merchant))
