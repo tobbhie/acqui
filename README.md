@@ -50,9 +50,9 @@ Copy `.env.example` to `.env`. Never commit it.
 - `KEEPER_REIMBURSEMENT_USDC`: fixed keeper reimbursement per payment.
 - `TRUST_PROXY`: `true` only behind a trusted proxy.
 - `TEST_DATABASE_URL`: optional, PostgreSQL URL for API tests.
-- `EMAIL_PROVIDER` (`oqumail` or `smtp`), `OQUMAIL_API_KEY`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`: optional email for payout address change confirmation.
+- `OQUMAIL_API_KEY`: optional. The only setting Oqumail needs for payout address change confirmation emails; the sender is configured in Oqumail.
+- `EMAIL_PROVIDER` (`oqumail` or `smtp`), `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`: optional SMTP alternative (all required together).
 - `KEEPER_PRIVATE_KEY`, `ATTESTER_PRIVATE_KEY`, `ARC_RPC_FALLBACK_URLS`, `SCANNER_START_BLOCK`, `SCAN_INTERVAL_MS`, `KEEPER_INTERVAL_MS`, `RECONCILE_INTERVAL_MS`, `SCAN_MAX_BLOCKS`, `REPLAY_OVERLAP_BLOCKS`, `CONFIRMATIONS`, `MAX_FEE_PER_GAS_GWEI`, `MIN_KEEPER_BALANCE_USDC`, `CURSOR_LAG_ALERT_SECONDS`, `STUCK_SETTLEMENT_ALERT_SECONDS`, `ALERT_WEBHOOK_URL`, `RECOVERY_AUTOEXECUTE`, `HEALTH_PORT`: worker settings (see `.env.example`).
 - `DEMO_MERCHANT_API_KEY`, `DEMO_WEBHOOK_SECRET`, `DEMO_API_BASE_URL`: demo store settings, server side only.
 - `VITE_API_BASE`, `ACQUI_API_PROXY_TARGET`: optional frontend API prefix and dev proxy target.
-- `OQUMAIL_API_KEY`: Oqumail per-mailbox API key when `EMAIL_PROVIDER=oqumail`.
 - `INTEGRATION_DEPLOYER_KEY`, `INTEGRATION_ATTESTER_KEY`, `INTEGRATION_CUSTOMER_KEY`, `INTEGRATION_KEEPER_KEY`, `INTEGRATION_MERCHANT_ADDRESS`, `INTEGRATION_FEE_SAFE_ADDRESS`, `DISTRIBUTOR_ADDRESS`, `RPC_URL`: only for `integration:settle` against a live testnet.

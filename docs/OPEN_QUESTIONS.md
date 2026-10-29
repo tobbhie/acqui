@@ -52,7 +52,7 @@
 
 ## Email for payout changes
 
-Oqumail (oqumail.com, correct spelling) publishes a transactional HTTPS API in its own guides: `POST https://api.oqumail.com/api/v1/emails`, `Authorization: Bearer <per-mailbox API key>`, JSON `{ from, to, subject, text }`, `202` means queued. It also offers IMAP/SMTP for mailboxes, but no SMTP relay for sending from apps is documented, so the integration uses the HTTPS API. Set `EMAIL_PROVIDER=oqumail`, `OQUMAIL_API_KEY` and `EMAIL_FROM` (a mailbox on your verified Oqumail domain). Not yet exercised against a live Oqumail account. Without a complete email configuration, payout changes stay disabled.
+Oqumail (oqumail.com, correct spelling) publishes a transactional HTTPS API in its own guides: `POST https://api.oqumail.com/api/v1/emails`, `Authorization: Bearer <per-mailbox API key>`, JSON `{ to, subject, text }`, `202` means queued. It also offers IMAP/SMTP for mailboxes, but no SMTP relay for sending from apps is documented, so the integration uses the HTTPS API. Set only `OQUMAIL_API_KEY`: the sender address is configured in Oqumail, so none is sent from here and `EMAIL_FROM` is ignored. Not yet exercised against a live Oqumail account. Without a complete email configuration, payout changes stay disabled.
 
 ## Not yet verified live
 

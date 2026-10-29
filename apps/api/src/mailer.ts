@@ -7,16 +7,17 @@ type FetchLike = (url: string, init: { method: string; headers: Record<string, s
 
 /**
  * Oqumail transactional API, as documented in Oqumail's own guides: `POST /api/v1/emails` with
- * `Authorization: Bearer <per-mailbox key>` and a JSON body `{ from, to, subject, text }`. `202` means queued.
+ * `Authorization: Bearer <per-mailbox key>` and a JSON body `{ to, subject, text }`. The sender address is configured in
+ * Oqumail itself, so none is sent from here. `202` means queued.
  * Retries only network errors, 429 and 5xx (never 4xx), with exponential backoff and jitter, at most 3 attempts.
  */
-export function createOqumailMailer(opts: { apiKey: string; from: string; url?: string; fetchImpl?: FetchLike; sleep?: (ms: number) => Promise<void> }): Mailer {
+export function createOqumailMailer(opts: { apiKey: string; url?: string; fetchImpl?: FetchLike; sleep?: (ms: number) => Promise<void> }): Mailer {
   const url = opts.url ?? OQUMAIL_DEFAULT_URL;
   const doFetch: FetchLike = opts.fetchImpl ?? ((u, init) => fetch(u, init));
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   return {
     async send(message) {
-      const body = JSON.stringify({ from: opts.from, to: message.to, subject: message.subject, text: message.text });
+      const body = JSON.stringify({ to: message.to, subject: message.subject, text: message.text });
       let lastError = 'unknown';
       for (let attempt = 1; attempt <= 3; attempt += 1) {
         try {
@@ -57,9 +58,7 @@ export function createSmtpMailer(config: ApiConfig): Mailer {
 
 /** Null when no complete email channel is configured: payout address changes are then disabled. */
 export function createMailer(config: ApiConfig): Mailer | null {
-  if (!config.payoutChangesEnabled) return null;
-  if (config.EMAIL_PROVIDER === 'oqumail' && config.OQUMAIL_API_KEY && config.EMAIL_FROM) {
-    return createOqumailMailer({ apiKey: config.OQUMAIL_API_KEY, from: config.EMAIL_FROM });
-  }
-  return createSmtpMailer(config);
+  if (config.emailProvider === 'oqumail' && config.OQUMAIL_API_KEY) return createOqumailMailer({ apiKey: config.OQUMAIL_API_KEY });
+  if (config.emailProvider === 'smtp') return createSmtpMailer(config);
+  return null;
 }

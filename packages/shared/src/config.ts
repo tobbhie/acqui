@@ -42,7 +42,7 @@ const apiShape = {
   WEBHOOK_SECRET_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters'),
   /** Optional transactional email. Absent means payout address changes stay frozen. */
   EMAIL_PROVIDER: z.enum(['oqumail', 'smtp']).optional(),
-  /** Oqumail per-mailbox API key (POST https://api.oqumail.com/api/v1/emails, Bearer auth). */
+  /** Oqumail per-mailbox API key (POST https://api.oqumail.com/api/v1/emails, Bearer auth). The only Oqumail setting: the sender is configured in Oqumail. */
   OQUMAIL_API_KEY: z.string().min(8).optional(),
   SMTP_HOST: z.string().min(1).optional(),
   SMTP_PORT: z.coerce.number().int().optional(),
@@ -108,7 +108,7 @@ const workerShape = {
 const apiSchema = z.object({ ...baseShape, ...apiShape });
 const workerSchema = z.object({ ...baseShape, ...workerShape });
 
-export type ApiConfig = z.infer<typeof apiSchema> & { payoutChangesEnabled: boolean };
+export type ApiConfig = z.infer<typeof apiSchema> & { payoutChangesEnabled: boolean; emailProvider: 'oqumail' | 'smtp' | null };
 export type WorkerConfig = z.infer<typeof workerSchema>;
 
 export class ConfigError extends Error {
@@ -135,11 +135,15 @@ export function loadApiConfig(env: Record<string, string | undefined>): ApiConfi
   if (!parsed.success) throw new ConfigError('api', formatIssues(parsed.error));
   requireProductionRpc('api', parsed.data);
   const d = parsed.data;
-  // Payout changes need a working email channel: Oqumail's HTTPS API or plain SMTP. Otherwise they stay disabled.
-  const smtpReady = d.EMAIL_PROVIDER === 'smtp' && Boolean(d.SMTP_HOST && d.SMTP_PORT && d.SMTP_USER && d.SMTP_PASSWORD && d.EMAIL_FROM);
-  const oqumailReady = d.EMAIL_PROVIDER === 'oqumail' && Boolean(d.OQUMAIL_API_KEY && d.EMAIL_FROM);
-  const emailReady = smtpReady || oqumailReady;
-  return { ...d, payoutChangesEnabled: emailReady };
+  // Payout changes need a working email channel. Oqumail needs only its API key: the sender address is set up in the
+  // provider. Plain SMTP needs full credentials plus a From address. Otherwise payout changes stay disabled.
+  const smtpReady = Boolean(d.SMTP_HOST && d.SMTP_PORT && d.SMTP_USER && d.SMTP_PASSWORD && d.EMAIL_FROM);
+  const oqumailReady = Boolean(d.OQUMAIL_API_KEY);
+  const emailProvider: ApiConfig['emailProvider'] =
+    d.EMAIL_PROVIDER === 'smtp' ? (smtpReady ? 'smtp' : null)
+    : d.EMAIL_PROVIDER === 'oqumail' ? (oqumailReady ? 'oqumail' : null)
+    : oqumailReady ? 'oqumail' : smtpReady ? 'smtp' : null;
+  return { ...d, emailProvider, payoutChangesEnabled: emailProvider !== null };
 }
 
 export function loadWorkerConfig(env: Record<string, string | undefined>): WorkerConfig {
