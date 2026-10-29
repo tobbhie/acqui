@@ -30,7 +30,7 @@ bun run worker:dev     # needs the worker variables below and a deployed distrib
 bun run verify:scanner # read-only check of the deposit decoder against real Arc Testnet logs
 ```
 
-The API applies its SQL migrations on startup. For tests, run PostgreSQL and create a database named `acqui_test` (or set `TEST_DATABASE_URL`). `docs/RAILWAY.md` covers deploying the API, worker and website to Railway. `docs/DEMO.md` covers the demo store and hosted checkout. `docs/API.md` has the endpoint list and a curl walkthrough, `docs/WEBHOOKS.md` how merchants verify webhooks, and `docs/RUNBOOK.md` how to operate the worker.
+The API applies its SQL migrations on startup. For tests, run PostgreSQL and create a database named `acqui_test` (or set `TEST_DATABASE_URL`). `docs/SUBMISSION.md` lists what the Arc Microgrants submission needs. `docs/RAILWAY.md` covers deploying the API, worker and website to Railway. `docs/DEMO.md` covers the demo store and hosted checkout. `docs/API.md` has the endpoint list and a curl walkthrough, `docs/WEBHOOKS.md` how merchants verify webhooks, and `docs/RUNBOOK.md` how to operate the worker.
 
 See `docs/ARCHITECTURE.md` for the layout, `docs/THREAT_MODEL.md` for contract risks, and `docs/OPEN_QUESTIONS.md` for open decisions.
 
