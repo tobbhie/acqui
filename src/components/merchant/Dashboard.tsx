@@ -2,6 +2,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card } from '@/components/Shell'
+import { LIVE_PAYMENT_CAPABILITY } from '@/payment-capabilities'
 import { Button, Pill } from '@/components/ui'
 import { ApiKeyCreate } from '@/components/merchant/ApiKeyCreate'
 import { IntegrationTab } from '@/components/merchant/IntegrationTab'
@@ -58,6 +59,15 @@ export function Dashboard({ session, merchant }: { session: SessionInfo; merchan
           </ol>
         </Card>
       )}
+
+      <Card className="!p-5">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--subtle)]">Accepted today</p><p className="mt-1 font-semibold">{LIVE_PAYMENT_CAPABILITY.asset} on {LIVE_PAYMENT_CAPABILITY.network}</p></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--subtle)]">Settlement</p><p className="mt-1 font-semibold">{LIVE_PAYMENT_CAPABILITY.settlementAsset} on Arc</p></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--subtle)]">Planned</p><p className="mt-1 text-sm text-[var(--ink-2)]">More networks and currencies, with Acqui handling conversion and routing.</p></div>
+        </div>
+        <p className="mt-3 text-xs text-[var(--muted)]">Future routing, FX, off-ramp and escrow features are not available yet.</p>
+      </Card>
 
       <div role="tablist" aria-label="Dashboard sections" className="flex gap-1 overflow-x-auto">
         {TABS.map((t) => (

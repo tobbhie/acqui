@@ -1,4 +1,5 @@
 node_modules
+.tools/
 dist
 .env
 .env.*
@@ -11,5 +12,6 @@ broadcast
 *.log
 console.jsonl
 traces.jsonl
+design-qa-*.png
 acqui/
 contracts/contract-metadata/*.json

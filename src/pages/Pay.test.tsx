@@ -30,7 +30,7 @@ function render(opts: { status: PaymentStatus; minutesLeft?: number; received?: 
 void describe('hosted checkout rendering', () => {
   void it('shows the exact amount, address, QR, countdown and warnings while payable', () => {
     const html = render({ status: 'awaiting_payment' })
-    for (const needle of ['10.00', 'USDC', RECEIVER, 'Time left to pay', 'Copy address', 'Before you send', 'Arc Testnet', 'order-1001', 'Test mode', 'holds the address only']) {
+    for (const needle of ['10.00', 'USDC', RECEIVER, 'Time left to pay', 'Copy address', 'Before you send', 'Arc Testnet', 'order-1001', 'Test mode', 'holds the address only', 'Available now', 'Other networks and assets', 'Coming soon', 'Only send USDC on Arc']) {
       assert.ok(html.includes(needle), `missing ${needle}`)
     }
     assert.match(html, /<svg[^>]*role="img"[^>]*aria-label="QR code/)
