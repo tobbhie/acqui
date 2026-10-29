@@ -15,7 +15,7 @@ Built with [Arc Studio](https://studio.arc.io)
 
 ## Pages
 
-The site serves `/` (landing), `/docs` (developer docs, pre-rendered at build time for search engines), `/demo`, `/merchants` and `/pay/{id}` (hosted checkout).
+The site serves `/` (landing), `/docs` (developer docs, pre-rendered at build time for search engines (served as docs.html so /docs has no redirect)), `/demo`, `/merchants` and `/pay/{id}` (hosted checkout).
 
 ## Development
 

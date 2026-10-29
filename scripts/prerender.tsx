@@ -3,7 +3,7 @@
  * see the content without running JavaScript) plus robots.txt and, when SITE_URL is set, sitemap.xml.
  * The browser app still loads on top of it as usual.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { renderToString } from 'react-dom/server'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -48,8 +48,8 @@ html = html
   .replace('</head>', `    ${head}\n    <meta name="twitter:card" content="summary" />\n  </head>`)
   .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
 
-mkdirSync(`${DIST}/docs`, { recursive: true })
-writeFileSync(`${DIST}/docs/index.html`, html)
+// docs.html is served at /docs (no redirect to /docs/), which keeps the canonical link exact.
+writeFileSync(`${DIST}/docs.html`, html)
 
 const robots = [
   'User-agent: *',
