@@ -1,6 +1,6 @@
 # Deploying Acqui to Railway
 
-Three Railway services in one project, plus the frontend on Vercel:
+Three Railway services in one project:
 
 | Service | What | Config file | Replicas |
 |---|---|---|---|
@@ -63,10 +63,9 @@ Do not set `PORT` or `HEALTH_PORT` on either service: Railway injects `PORT` and
 
 The worker refuses to start if the chain ID, USDC address, attester or factory do not match the contract at `DISTRIBUTOR_ADDRESS`, or if `ATTESTER_PRIVATE_KEY` is not that contract's attester. A crash-looping worker with one of those messages in its log is the expected, safe result of a wrong value.
 
-## 3. Domains and the frontend
-- Give `api` a public domain (Railway generated, or custom `api.acqui.xyz`).
-- `vercel.json` rewrites `/api/*` on the Vercel site to `https://api.acqui.xyz/*`. Edit that destination if your API domain differs. This keeps the session cookie first-party.
-- `checkout.<domain>` can alias the same Vercel deployment: the app serves only `/pay/{id}` on hosts that start with `checkout.`.
+## 3. Domains
+- Give `api` a public domain (Railway generated, or a custom one).
+- `GOOGLE_REDIRECT_URI`, `DASHBOARD_BASE_URL` and `CHECKOUT_BASE_URL` must match the public addresses where the web app and the API's `/api` path are reachable from the browser. The API's `/auth/google/callback` is the path Google redirects to.
 
 ## 4. Deploy order and checks
 1. Deploy `api` first. It applies database migrations at start. The worker also applies them, under a lock, so order is not critical.
