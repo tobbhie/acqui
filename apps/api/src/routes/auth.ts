@@ -25,9 +25,9 @@ export function authRoutes(deps: AppDeps, authLimiter: FixedWindowLimiter): Hono
   });
 
   app.get('/google/callback', limit, async (c) => {
-    const fail = () => {
+    const fail = (reason: 'login_failed' | 'email_unverified' = 'login_failed') => {
       deleteCookie(c, names.oauth, { path: '/', secure: production });
-      return c.redirect(`${dashboard}/dashboard?error=login_failed`, 302);
+      return c.redirect(`${dashboard}/dashboard?error=${reason}`, 302);
     };
     const state = c.req.query('state');
     const cookieState = getCookie(c, names.oauth);
@@ -36,13 +36,17 @@ export function authRoutes(deps: AppDeps, authLimiter: FixedWindowLimiter): Hono
     if (!flow) return fail();
     try {
       const profile = await deps.googleAuth.exchange(new URL(c.req.url), flow);
-      if (!profile.emailVerified) return fail();
+      if (!profile.emailVerified) return fail('email_unverified');
       const userId = await upsertUser(deps.db, { sub: profile.sub, email: profile.email, name: profile.name });
       const session = await createSession(deps.db, userId, deps.now());
       setSessionCookie(deps, c, session.token, SESSION_TTL_MS / 1000);
       deleteCookie(c, names.oauth, { path: '/', secure: production });
       return c.redirect(`${dashboard}/dashboard`, 302);
-    } catch {
+    } catch (error) {
+      // Do not log tokens, codes, state, or the callback URL. The error class/message is enough to diagnose providers.
+      console.error('google oauth callback failed', {
+        error: error instanceof Error ? error.message : 'unknown error',
+      });
       return fail();
     }
   });

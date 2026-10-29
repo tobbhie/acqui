@@ -2,7 +2,7 @@ import { Card } from '@/components/Shell'
 import { Alert, LinkButton } from '@/components/ui'
 import { googleLoginUrl } from '@/lib/api'
 
-export function LoginPanel({ failed, confirming = false }: { failed: boolean; confirming?: boolean }) {
+export function LoginPanel({ error, confirming = false }: { error: string | null; confirming?: boolean }) {
   return (
     <div className="mx-auto max-w-md pt-8">
       <Card>
@@ -15,9 +15,13 @@ export function LoginPanel({ failed, confirming = false }: { failed: boolean; co
             <Alert tone="info" title="Sign in to confirm">Sign in with the Google account that requested the change, then open the link in your email again.</Alert>
           </div>
         )}
-        {failed && (
+        {error && (
           <div className="mt-4">
-            <Alert tone="danger" title="Sign-in failed">Google did not confirm a verified email. Try again with another account.</Alert>
+            <Alert tone="danger" title="Sign-in failed">
+              {error === 'email_unverified'
+                ? 'Google did not confirm a verified email. Try again with another account.'
+                : 'Google sign-in could not be completed. Please try again.'}
+            </Alert>
           </div>
         )}
         <div className="mt-6">

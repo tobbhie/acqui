@@ -13,7 +13,7 @@ export function Merchants() {
   const path = usePath()
   const session = useSession()
   const merchant = useMerchant(Boolean(session.data?.merchant))
-  const loginFailed = new URLSearchParams(window.location.search).get('error') === 'login_failed'
+  const loginError = new URLSearchParams(window.location.search).get('error')
 
   if (session.isPending) return <div className="mx-auto max-w-md pt-8"><Skeleton className="h-48" /></div>
   if (session.isError) {
@@ -27,7 +27,7 @@ export function Merchants() {
     )
   }
   const confirming = path.replace(/\/+$/, '') === '/dashboard/payout/confirm'
-  if (!session.data) return <LoginPanel failed={loginFailed} confirming={confirming} />
+  if (!session.data) return <LoginPanel error={loginError} confirming={confirming} />
   if (confirming) return <PayoutConfirm />
   if (!session.data.merchant) return <CreateMerchant />
   if (merchant.isPending) return <div className="mx-auto max-w-3xl pt-8"><Skeleton className="h-64" /></div>

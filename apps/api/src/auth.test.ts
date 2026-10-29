@@ -61,7 +61,7 @@ void describe('Google OAuth sessions', () => {
     const state = new URL(start.headers.get('location') ?? '').searchParams.get('state') ?? '';
     const cookie = (start.headers.getSetCookie().find((c) => c.startsWith('acqui_oauth_state=')) ?? '').split(';')[0] ?? '';
     const cb = await h.app.request(`/auth/google/callback?state=${state}&code=sub-d`, { headers: { cookie } });
-    assert.match(cb.headers.get('location') ?? '', /error=login_failed/);
+    assert.match(cb.headers.get('location') ?? '', /error=email_unverified/);
     assert.equal((await h.db`SELECT 1 FROM users WHERE google_sub = 'sub-d'`).length, 0);
   });
 

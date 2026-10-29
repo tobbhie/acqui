@@ -22,6 +22,13 @@ export interface GoogleAuth {
 
 const GOOGLE_ISSUER = new URL('https://accounts.google.com');
 
+/** Rebuild the externally registered callback URL after a reverse proxy rewrites its origin/path. */
+export function publicCallbackUrl(redirectUri: string, proxiedCallbackUrl: URL): URL {
+  const callback = new URL(redirectUri);
+  callback.search = proxiedCallbackUrl.search;
+  return callback;
+}
+
 /** Google OpenID Connect through `openid-client` (certified, maintained). Authorization code flow with PKCE. */
 export function createGoogleAuth(opts: { clientId: string; clientSecret: string; redirectUri: string }): GoogleAuth {
   let configPromise: Promise<oidc.Configuration> | undefined;
@@ -47,7 +54,7 @@ export function createGoogleAuth(opts: { clientId: string; clientSecret: string;
     },
 
     async exchange(callbackUrl, flow) {
-      const tokens = await oidc.authorizationCodeGrant(await config(), callbackUrl, {
+      const tokens = await oidc.authorizationCodeGrant(await config(), publicCallbackUrl(opts.redirectUri, callbackUrl), {
         pkceCodeVerifier: flow.codeVerifier,
         expectedState: flow.state,
         expectedNonce: flow.nonce,
