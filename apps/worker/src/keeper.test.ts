@@ -277,7 +277,7 @@ void describe('recovery executor', () => {
     await keeperTick(ctx); await keeperTick(ctx);
     await h.db`UPDATE payment_intents SET status = status WHERE id = ${i.id}`;
     await h.db`INSERT INTO recovery_cases (payment_intent_id, merchant_id, reason, refund_address, after_settlement, executable_at)
-               SELECT id, merchant_id, 'overpaid', refund_address, true, now() FROM payment_intents WHERE id = ${i.id}`;
+               SELECT id, merchant_id, 'overpaid', refund_address, true, ${h.clock.now}::timestamptz FROM payment_intents WHERE id = ${i.id}`;
     chain.simQueue.push({ ok: false, error: 'NothingToRecover', detail: '' });
     await recoveryTick(recCtx());
     assert.equal((await h.db`SELECT status FROM recovery_cases WHERE payment_intent_id = ${i.id}`)[0]?.status, 'closed');

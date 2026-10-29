@@ -25,7 +25,8 @@ void describe('API keys', () => {
     const res = await h.call('POST', '/v1/merchant/api-keys', { session, body: { label: 'prod' } });
     const secret = res.body.secret as string;
     assert.match(secret, /^aq_live_[0-9a-f]{16}_[A-Za-z0-9_-]{43}$/);
-    const secretPart = secret.split('_')[3] ?? '';
+    // base64url secrets can contain '_', so cut by the fixed-length prefix rather than by splitting.
+    const secretPart = secret.slice('aq_live_'.length + 16 + 1);
     assert.ok(!JSON.stringify(await h.db`SELECT * FROM api_keys`).includes(secretPart));
     const list = await h.call('GET', '/v1/merchant/api-keys', { session });
     assert.ok(!list.text.includes(secretPart));

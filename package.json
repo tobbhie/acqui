@@ -16,7 +16,7 @@
     "api:dev": "bun run apps/api/src/index.ts",
     "worker:dev": "bun run apps/worker/src/index.ts",
     "verify:chain": "bun run scripts/verify-chain.ts",
-    "test": "bun test packages apps src",
+    "test": "bun test ./packages ./apps ./src",
     "integration:settle": "bun run scripts/integration-settle.ts",
     "contracts:codegen": "bun run scripts/codegen-receiver.ts",
     "verify:scanner": "bun run scripts/verify-scanner.ts"
