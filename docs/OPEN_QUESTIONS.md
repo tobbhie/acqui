@@ -21,7 +21,7 @@
 ## Decided in Step 05 (tell me if you disagree)
 
 - **Vite instead of Next.js.** Arc Studio runs Vite, so the app is one static single page app. Checkout is routed by host (`checkout.` serves only `/pay/{id}`). Everything the spec needs from Next.js (routes, host routing) works the same; there is no server rendering. Say so if you need a Next.js port for submission.
-- **Same-origin API.** The browser calls `/api/*`, which Vercel rewrites to the API host. This keeps the session cookie first-party. If you would rather call `api.acqui.xyz` directly, cookies need a shared parent domain and CORS changes.
+- **Same-origin API.** The browser calls `/api/*`, which the Railway `web` service forwards to the API. This keeps the session cookie first-party. If you would rather call `api.acqui.xyz` directly, cookies need a shared parent domain and CORS changes.
 - **Demo prices** are 1.00 and 2.00 USDC so a real walkthrough costs little. Change them in `apps/api/src/routes/demo.ts`.
 - **Checkout shows no refund address** (it can equal the merchant payout address). The page only explains that refunds go to the address committed at creation.
 - **No visual review done.** I could not open the pages in a browser here. Layout was built mobile-first and checked by typecheck, lint and render tests, so please look at the pages on a phone and a desktop.

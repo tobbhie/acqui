@@ -21,7 +21,9 @@
     "contracts:codegen": "bun run scripts/codegen-receiver.ts",
     "verify:scanner": "bun run scripts/verify-scanner.ts",
     "start:api": "bun run apps/api/src/index.ts",
-    "start:worker": "bun run apps/worker/src/index.ts"
+    "start:worker": "bun run apps/worker/src/index.ts",
+    "build": "vite build",
+    "start:web": "bun run apps/web/src/index.ts"
   },
   "dependencies": {
     "@circle-fin/adapter-viem-v2": "^1.19.2",

@@ -17,9 +17,9 @@ The demo needs the contracts to be deployed and verified (`DISTRIBUTOR_ADDRESS`)
 Reads only the database-backed public API: `GET /public/payments/{id}` once and `GET /public/payments/{id}/status` every 4 seconds (15 seconds while only a refund remains), stopping at settled or expired. The countdown uses the server's clock. Statuses shown: waiting, payment seen, settling, settled (with the explorer link for the verified settlement transaction), expired, underpaid and refund in progress. The receiver address is shown only while the payment is waiting and the window is open. The QR encodes the plain address only, not a payment URI.
 
 ## Hosting
-- Frontend: Vercel (`vercel.json` rewrites `/api/*` to the API and every other path to the app). Edit the destination if the API host is not `api.acqui.xyz`.
+- Website: the Railway `web` service serves the app and forwards `/api/*` to the API (see `docs/RAILWAY.md`).
 - `checkout.<domain>` can point at the same deployment: when the host starts with `checkout.` the app serves only `/pay/{id}`.
-- Keep `/api` same-origin so the HttpOnly session cookie stays first-party. Google's redirect URI is `https://<web origin>/api/auth/google/callback`.
+- The browser only talks to the website origin, so the HttpOnly session cookie stays first-party. Google's redirect URI is `https://<website origin>/api/auth/google/callback`.
 - API and worker: Railway, one worker replica.
 
 ## Walkthrough for a real payment

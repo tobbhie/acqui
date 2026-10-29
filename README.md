@@ -30,7 +30,7 @@ bun run worker:dev     # needs the worker variables below and a deployed distrib
 bun run verify:scanner # read-only check of the deposit decoder against real Arc Testnet logs
 ```
 
-The API applies its SQL migrations on startup. For tests, run PostgreSQL and create a database named `acqui_test` (or set `TEST_DATABASE_URL`). `docs/RAILWAY.md` covers deploying the API and worker to Railway. `docs/DEMO.md` covers the demo store and hosted checkout. `docs/API.md` has the endpoint list and a curl walkthrough, `docs/WEBHOOKS.md` how merchants verify webhooks, and `docs/RUNBOOK.md` how to operate the worker.
+The API applies its SQL migrations on startup. For tests, run PostgreSQL and create a database named `acqui_test` (or set `TEST_DATABASE_URL`). `docs/RAILWAY.md` covers deploying the API, worker and website to Railway. `docs/DEMO.md` covers the demo store and hosted checkout. `docs/API.md` has the endpoint list and a curl walkthrough, `docs/WEBHOOKS.md` how merchants verify webhooks, and `docs/RUNBOOK.md` how to operate the worker.
 
 See `docs/ARCHITECTURE.md` for the layout, `docs/THREAT_MODEL.md` for contract risks, and `docs/OPEN_QUESTIONS.md` for open decisions.
 
@@ -55,4 +55,5 @@ Copy `.env.example` to `.env`. Never commit it.
 - `KEEPER_PRIVATE_KEY`, `ATTESTER_PRIVATE_KEY`, `ARC_RPC_FALLBACK_URLS`, `SCANNER_START_BLOCK`, `SCAN_INTERVAL_MS`, `KEEPER_INTERVAL_MS`, `RECONCILE_INTERVAL_MS`, `SCAN_MAX_BLOCKS`, `REPLAY_OVERLAP_BLOCKS`, `CONFIRMATIONS`, `MAX_FEE_PER_GAS_GWEI`, `MIN_KEEPER_BALANCE_USDC`, `CURSOR_LAG_ALERT_SECONDS`, `STUCK_SETTLEMENT_ALERT_SECONDS`, `ALERT_WEBHOOK_URL`, `RECOVERY_AUTOEXECUTE`, `HEALTH_PORT`: worker settings (see `.env.example`).
 - `DEMO_MERCHANT_API_KEY`, `DEMO_WEBHOOK_SECRET`, `DEMO_API_BASE_URL`: demo store settings, server side only.
 - `VITE_API_BASE`, `ACQUI_API_PROXY_TARGET`: optional frontend API prefix and dev proxy target.
+- `API_INTERNAL_URL` (required) and `WEB_DIST_DIR` (optional): the production web server's API address and build folder.
 - `INTEGRATION_DEPLOYER_KEY`, `INTEGRATION_ATTESTER_KEY`, `INTEGRATION_CUSTOMER_KEY`, `INTEGRATION_KEEPER_KEY`, `INTEGRATION_MERCHANT_ADDRESS`, `INTEGRATION_FEE_SAFE_ADDRESS`, `DISTRIBUTOR_ADDRESS`, `RPC_URL`: only for `integration:settle` against a live testnet.

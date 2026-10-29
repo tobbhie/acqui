@@ -1,23 +1,25 @@
 # Deploying Acqui to Railway
 
-Three Railway services in one project:
+Four Railway services in one project:
 
 | Service | What | Config file | Replicas |
 |---|---|---|---|
 | `Postgres` | Railway PostgreSQL plugin | n/a | n/a |
 | `api` | Merchant API, sign-in, public checkout API, demo server | `railway.api.json` (`Dockerfile.api`) | 1 (can be raised later) |
 | `worker` | Chain scanner, settlement keeper, reconciliation, webhooks | `railway.worker.json` (`Dockerfile.worker`) | **exactly 1** |
+| `web` | The website (landing, demo, merchant dashboard, hosted checkout). Serves the built app and forwards `/api/*` to the API | `railway.web.json` (`Dockerfile.web`) | 1 (can be raised later) |
 
 The worker is safe against a second copy (a database lock keeps only one active), but keep it at one replica anyway. During a rolling deploy the new worker reports `waiting_for_leader` (healthy) until the old one stops.
 
-The Dockerfiles were not built inside Arc Studio (no registry access there). I checked the same file set by installing production dependencies in a clean folder and booting both services from it in `NODE_ENV=production`, including a second worker waiting on the lock. Railway's first build is the real test of the Docker layer.
+The Dockerfiles were not built inside Arc Studio (no registry access there). I checked the same file set by installing production dependencies in a clean folder and booting the API and worker from it in `NODE_ENV=production`, including a second worker waiting on the lock. The web server was run against the real API and its tests cover the proxy. Railway's first build is the real test of the Docker layer.
 
 ## 1. Create the project
 1. Railway: **New Project** -> **Deploy from GitHub repo** -> `tobbhie/acqui`. Cancel the auto-created service if it tries to guess a builder.
 2. Add **PostgreSQL** (New -> Database). Keep its default name `Postgres`.
 3. Create service **api**: New -> GitHub Repo -> same repo. In Settings -> **Config as Code**, set the config file path to `/railway.api.json`.
 4. Create service **worker**: same repo, config file path `/railway.worker.json`.
-5. Do not set a root directory. The build context is the repository root.
+5. Create service **web**: same repo, config file path `/railway.web.json`.
+6. Do not set a root directory. The build context is the repository root.
 
 ## 2. Variables
 Generate each secret once (run locally, paste into Railway; mark them **sealed** if Railway offers it):
@@ -36,10 +38,11 @@ Generate each secret once (run locally, paste into Railway; mark them **sealed**
 | `ARC_RPC_FALLBACK_URLS` | optional, comma separated |
 | `DISTRIBUTOR_ADDRESS` | the deployed distributor (see `docs/DEPLOYMENTS.md`) |
 | `KEEPER_REIMBURSEMENT_USDC` | `0.02` (must not exceed the contract's immutable cap) |
-| `CHECKOUT_BASE_URL` | public web origin, e.g. `https://acqui.xyz` (or `https://checkout.acqui.xyz` if checkout lives there) |
-| `DASHBOARD_BASE_URL` | public web origin of the dashboard, e.g. `https://acqui.xyz` |
+| `PORT` | `8080` (fixed, so the web service knows where to reach the API) |
+| `CHECKOUT_BASE_URL` | the checkout origin, e.g. `https://checkout.acqui.xyz` (or the main origin if you use one domain) |
+| `DASHBOARD_BASE_URL` | the website origin, e.g. `https://acqui.xyz` |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | from Google Cloud |
-| `GOOGLE_REDIRECT_URI` | `https://<web origin>/api/auth/google/callback` (also add it in Google Cloud) |
+| `GOOGLE_REDIRECT_URI` | `https://<website origin>/api/auth/google/callback` (also add it in Google Cloud) |
 | `SESSION_SECRET`, `API_KEY_PEPPER`, `WEBHOOK_SECRET_ENCRYPTION_KEY` | generated above |
 | `TRUST_PROXY` | `true` (Railway sits behind a proxy) |
 | `OQUMAIL_API_KEY` | optional; turns on emailed payout-address changes |
@@ -59,21 +62,32 @@ Generate each secret once (run locally, paste into Railway; mark them **sealed**
 | `SCANNER_START_BLOCK` | only needed on the very first start if payments already exist |
 | `MIN_KEEPER_BALANCE_USDC`, `CURSOR_LAG_ALERT_SECONDS`, `ALERT_WEBHOOK_URL` | optional tuning and alerts |
 
-Do not set `PORT` or `HEALTH_PORT` on either service: Railway injects `PORT` and both services use it.
+Do not set `PORT` or `HEALTH_PORT` on the worker or web service: Railway injects `PORT`. The API is the one service with a fixed `PORT` (8080).
 
 The worker refuses to start if the chain ID, USDC address, attester or factory do not match the contract at `DISTRIBUTOR_ADDRESS`, or if `ATTESTER_PRIVATE_KEY` is not that contract's attester. A crash-looping worker with one of those messages in its log is the expected, safe result of a wrong value.
 
+### `web`
+| Variable | Value |
+|---|---|
+| `API_INTERNAL_URL` | `http://${{api.RAILWAY_PRIVATE_DOMAIN}}:8080` (the API over Railway's private network). If private networking is not available in your environment, use the API's public URL instead |
+
+Nothing else: the web service holds no secrets and never sees a merchant API key.
+
 ## 3. Domains
-- Give `api` a public domain (Railway generated, or a custom one).
-- `GOOGLE_REDIRECT_URI`, `DASHBOARD_BASE_URL` and `CHECKOUT_BASE_URL` must match the public addresses where the web app and the API's `/api` path are reachable from the browser. The API's `/auth/google/callback` is the path Google redirects to.
+- `web`: attach your website domain (for example `acqui.xyz`) and, as a second domain on the **same service**, `checkout.acqui.xyz`. The app shows only the hosted checkout on hosts that start with `checkout.`.
+- `api`: give it its own public domain (for example `api.acqui.xyz`). Merchant servers call it directly to create payments. The browser never calls it: the website forwards `/api/*` to it, which keeps the session cookie first-party.
+- `GOOGLE_REDIRECT_URI`, `DASHBOARD_BASE_URL` and `CHECKOUT_BASE_URL` must match those public addresses exactly. Google redirects to `/api/auth/google/callback` on the website domain.
+- The web service takes the **last** `X-Forwarded-For` entry (the one Railway's edge adds) as the client address, because earlier entries can be spoofed by the client. This assumes Railway appends to that header; check the API's rate-limit behavior once after the first deploy.
 
 ## 4. Deploy order and checks
 1. Deploy `api` first. It applies database migrations at start. The worker also applies them, under a lock, so order is not critical.
-2. Deploy `worker`.
+2. Deploy `worker`, then `web`.
 3. Check, replacing the host:
 
         curl https://<api domain>/health            # contracts.configured must be true
         curl https://<api domain>/public/config     # payments_ready must be true
+        curl https://<website domain>/api/public/config   # same answer through the website, proves the forwarding
+        curl -I https://<website domain>/demo       # the app shell (200)
         curl https://<worker domain>/health         # phase "running"; only if you gave the worker a domain
 
    The worker needs no public domain. Use Railway's deploy logs, where `acqui_worker_started` and `scanner_cursor_initialized` mark a healthy start.
