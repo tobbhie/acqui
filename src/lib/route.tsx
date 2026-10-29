@@ -15,10 +15,25 @@ export function usePath(): string {
   return path
 }
 
+/** Scrolls to the element a #fragment points at. The target may not be rendered yet right after a page change, so retry briefly. */
+export function scrollToHash(hash: string, attempts = 12): void {
+  const id = decodeURIComponent(hash.replace(/^#/, ''))
+  if (!id) return
+  const el = document.getElementById(id)
+  if (el) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+    return
+  }
+  if (attempts > 0) window.setTimeout(() => scrollToHash(hash, attempts - 1), 50)
+}
+
 export function navigate(to: string): void {
   window.history.pushState({}, '', to)
   window.dispatchEvent(new Event('acqui:navigate'))
-  window.scrollTo({ top: 0 })
+  const hash = new URL(to, window.location.origin).hash
+  if (hash) scrollToHash(hash)
+  else window.scrollTo({ top: 0 })
 }
 
 export function Link({ to, onClick, ...rest }: { to: string } & AnchorHTMLAttributes<HTMLAnchorElement>) {

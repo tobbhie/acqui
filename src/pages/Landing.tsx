@@ -12,11 +12,12 @@ import {
   WalletCards,
   Webhook,
 } from 'lucide-react'
+import { useEffect } from 'react'
 import { NetworkArc, TokenUSDC } from '@web3icons/react'
 import { FeeCalculator } from '@/components/FeeCalculator'
 import { PaymentCapabilities } from '@/components/PaymentCapabilities'
 import { usePublicConfig } from '@/lib/hooks'
-import { Link } from '@/lib/route'
+import { Link, scrollToHash } from '@/lib/route'
 import { CHECKOUT_WINDOW_SECONDS } from '@acqui/shared'
 
 const cta = 'inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]'
@@ -75,6 +76,10 @@ function SettlementGraphic() {
 
 export function Landing() {
   const config = usePublicConfig()
+  // A link such as /#how-it-works opened directly (or reloaded) lands on its section.
+  useEffect(() => {
+    if (window.location.hash) scrollToHash(window.location.hash)
+  }, [])
 
   return (
     <div className="pb-4">
@@ -113,7 +118,7 @@ export function Landing() {
         </ul>
       </section>
 
-      <section className="border-b border-[var(--border)] py-20" aria-labelledby="payment-flow-heading">
+      <section id="how-it-works" className="scroll-mt-24 border-b border-[var(--border)] py-20" aria-labelledby="payment-flow-heading">
         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
         <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">From customer payment to business settlement.</h2>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">A single, streamlined flow. Your customer pays with crypto, Acqui handles the complexity, and you receive USDC on Arc in your business wallet.</p>
