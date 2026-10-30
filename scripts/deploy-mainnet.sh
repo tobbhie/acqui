@@ -2,7 +2,7 @@
 # Deploys PaymentDistributor (which creates the factory) and records the result.
 # YOU run this, with your own key. Arc Studio does not deploy to or sign for mainnet.
 #
-#   export PRIVATE_KEY=$(cat .mainnet-deployer/deployer-key.txt)
+#   export PRIVATE_KEY=0x...   # your deployer key, from your own storage
 #   export ATTESTER=0x...      # new mainnet signing address (not the testnet one)
 #   export FEE_SAFE=0x...      # fee recipient, immutable
 #   bash scripts/deploy-mainnet.sh

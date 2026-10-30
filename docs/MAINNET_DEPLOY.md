@@ -9,14 +9,12 @@ Arc Studio does not deploy to, sign for or fund mainnet. Read the mainnet warnin
 4. **Max keeper reimbursement** (<= 0.10 USDC) and **recovery delay** (1 hour to 30 days). Testnet used 0.05 USDC and 86400 seconds. Measured gas for a settlement was about 0.011 to 0.013 USDC on testnet.
 
 ## Deployer wallet
-A throwaway wallet has no power over the contracts after deployment (they have no owner), so it only needs a little USDC for gas. Its key is in the Code panel at `.mainnet-deployer/deployer-key.txt` (git-ignored, never printed in chat); the address is in `.mainnet-deployer/deployer.address`. Fund it, deploy, then send any leftover USDC back to your own wallet and delete the key file. If you would rather not use it, create your own with `cast wallet new` and keep that key to yourself.
-
-    export PRIVATE_KEY=$(cat .mainnet-deployer/deployer-key.txt)
+A throwaway wallet has no power over the contracts after deployment (they have no owner), so it only needs a little USDC for gas. Keep its key in your own storage, never in the repository or in chat. Load it into the shell only for the deployment, for example `export PRIVATE_KEY=0x...` typed at the prompt, then unset it. Send any leftover USDC back to your own wallet afterwards.
 
 ## Deploy
 Run the helper script yourself in the Code panel terminal. It checks the chain ID (5042), that USDC at `0x3600…0000` answers with 6 decimals, that the fee recipient has contract code, that the deployer holds enough USDC, and that the attester differs from the fee recipient and the deployer. It shows the full plan and only continues after you type `DEPLOY`. Afterwards it reads the contract back and compares USDC, attester, fee recipient, factory and chain ID, then writes `.mainnet-deployer/deployment.json`.
 
-    export PRIVATE_KEY=$(cat .mainnet-deployer/deployer-key.txt)
+    export PRIVATE_KEY=0x...   # your deployer key, from your own storage
     export ATTESTER=0x...      # new mainnet signing address
     export FEE_SAFE=0x...      # fee recipient, permanent
     DRY_RUN=1 bash scripts/deploy-mainnet.sh    # checks only, sends nothing
