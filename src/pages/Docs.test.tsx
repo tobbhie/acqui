@@ -38,7 +38,8 @@ void describe('docs page', () => {
   })
 
   void it('uses the real API address and describes Arc mainnet, with no placeholders or testnet wording', () => {
-    assert.ok(text.includes('https://api.51-68-172-236.nip.io'))
+    assert.ok(text.includes('https://acqui.pages.dev/api'))
+    assert.ok(!text.includes('nip.io'), 'examples use the stable site address, not a raw server address')
     assert.ok(!html.includes('YOUR-SITE') && !text.includes('YOUR-SITE'))
     assert.ok(text.includes('Live on Arc mainnet') && text.includes('chain ID 5042'))
     for (const link of ['https://explorer.arc.io/address/0xdb03b5D5738E44E873bcC0fA7b75A27C3Bf10418', 'https://explorer.arc.io/address/0x3600000000000000000000000000000000000000']) {

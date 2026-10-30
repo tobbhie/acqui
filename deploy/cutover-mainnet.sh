@@ -53,7 +53,8 @@ done
 
 set_env "$API_ENV" CHECKOUT_BASE_URL https://acqui.pages.dev
 set_env "$API_ENV" DASHBOARD_BASE_URL https://acqui.pages.dev
-set_env "$API_ENV" GOOGLE_REDIRECT_URI https://api.51-68-172-236.nip.io/auth/google/callback
+# Must match the address the browser starts sign-in from (the site's /api path), so the sign-in cookie is sent back on the callback.
+set_env "$API_ENV" GOOGLE_REDIRECT_URI https://acqui.pages.dev/api/auth/google/callback
 set_env "$API_ENV" KEEPER_REIMBURSEMENT_USDC 0.02
 
 set_env "$WORKER_ENV" DISTRIBUTOR_DEPLOY_BLOCK 28630653

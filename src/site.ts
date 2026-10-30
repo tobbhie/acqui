@@ -3,11 +3,15 @@ import { getNetwork } from '@acqui/shared'
 
 const trim = (value: string): string => value.replace(/\/+$/, '')
 
-/** Public address of the Acqui API, used in every example a developer copies. Override at build time with VITE_PUBLIC_API_URL. */
-export const PUBLIC_API_URL = trim((import.meta.env.VITE_PUBLIC_API_URL as string | undefined) ?? 'https://api.51-68-172-236.nip.io')
-
 /** Public address of the website and hosted checkout. Override at build time with VITE_SITE_URL. */
 export const SITE_BASE_URL = trim((import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://acqui.pages.dev')
+
+/**
+ * Public address of the Acqui API, used in every example a developer copies. It is the site's own /api path,
+ * which forwards to the API, so one stable address serves browsers and servers alike.
+ * Override at build time with VITE_PUBLIC_API_URL.
+ */
+export const PUBLIC_API_URL = trim((import.meta.env.VITE_PUBLIC_API_URL as string | undefined) ?? `${SITE_BASE_URL}/api`)
 
 const mainnet = getNetwork('arc-mainnet')
 
