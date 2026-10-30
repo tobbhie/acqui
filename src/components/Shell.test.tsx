@@ -21,6 +21,14 @@ void describe('site navigation', () => {
     assert.ok(!html.includes('id="mobile-menu"'), 'menu panel is closed by default')
   })
 
+  void it('shows the Acqui wordmark as the home link, on every page including checkout', () => {
+    for (const minimal of [false, true]) {
+      const html = render(minimal)
+      assert.match(html, /aria-label="Acqui home"[^>]*>|href="\/"[^>]*aria-label="Acqui home"/)
+      assert.match(html, /<img src="\/acqui-wordmark\.svg" alt="Acqui"/)
+    }
+  })
+
   void it('lists the docs in the menu', () => {
     assert.match(render(), /href="\/docs"[^>]*>Docs</)
   })

@@ -39,8 +39,8 @@ export function Shell({ children, minimal = false }: { children: ReactNode; mini
   return (
     <div className="min-h-dvh flex flex-col">
       <header ref={header} className={clsx('relative mx-auto flex w-full items-center justify-between px-4 pb-3 pt-5', frame)}>
-        <Link to="/" className={clsx('display text-2xl font-bold text-[var(--ink)]', focusRing)} onClick={close}>
-          Acqui
+        <Link to="/" className={clsx('inline-flex items-center rounded-lg', focusRing)} onClick={close} aria-label="Acqui home">
+          <img src="/acqui-wordmark.svg" alt="Acqui" width={445} height={150} className="h-11 w-auto sm:h-12" />
         </Link>
         {!minimal && (
           <>
