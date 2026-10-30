@@ -37,6 +37,16 @@ void describe('docs page', () => {
     }
   })
 
+  void it('uses the real API address and describes Arc mainnet, with no placeholders or testnet wording', () => {
+    assert.ok(text.includes('https://api.51-68-172-236.nip.io'))
+    assert.ok(!html.includes('YOUR-SITE') && !text.includes('YOUR-SITE'))
+    assert.ok(text.includes('Live on Arc mainnet') && text.includes('chain ID 5042'))
+    for (const link of ['https://explorer.arc.io/address/0xdb03b5D5738E44E873bcC0fA7b75A27C3Bf10418', 'https://explorer.arc.io/address/0x3600000000000000000000000000000000000000']) {
+      assert.ok(html.includes(`href="${link}"`), `missing ${link}`)
+    }
+    assert.ok(!/testnet|test usdc|test mode/i.test(text), 'the docs are written for mainnet')
+  })
+
   void it('images have text alternatives', () => {
     assert.match(html, /role="img"[^>]*aria-labelledby="mock-title mock-desc"/)
     assert.match(html, /<figure[^>]*aria-label=/)
@@ -46,6 +56,8 @@ void describe('docs page', () => {
 void describe('docs code samples are valid and correct', () => {
   void it('JSON samples parse', () => {
     for (const sample of [S.CREATE_RESPONSE, S.WEBHOOK_EVENT, S.LIST_RESPONSE, S.ERROR_SHAPE, S.REFUND_ADDRESS]) JSON.parse(sample)
+    const reply = JSON.parse(S.CREATE_RESPONSE) as { livemode: boolean; chain_id: number }
+    assert.deepEqual([reply.livemode, reply.chain_id], [true, 5042])
   })
 
   void it('the request body in the curl and Node samples is the same payload', () => {

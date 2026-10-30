@@ -68,7 +68,7 @@ export function Pay({ publicId }: { publicId: string }) {
   const phase = checkoutPhase(current)
   const received = live?.received ?? p.received
   const settlement = live?.settlement ?? p.settlement
-  const networkName = p.livemode ? 'Arc' : 'Arc Testnet'
+  const networkName = p.livemode ? 'Arc mainnet' : 'Arc Testnet'
   const remaining = remainingMs(p.expires_at, live?.server_time, status.dataUpdatedAt || now, now)
   const merchant = sanitizeText(p.merchant_name, 80) || 'Merchant'
   const description = sanitizeText(p.description, 160)

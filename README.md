@@ -1,6 +1,6 @@
 # Acqui
 
-A USDC payment gateway for Arc. Merchants create a payment from their server, redirect the customer to a hosted checkout, and receive a signed webhook after the payment settles. Contracts for settlement, refunds and fee collection are written and tested, but nothing is deployed and no payments are processed yet.
+A USDC payment gateway for Arc. Merchants create a payment from their server, redirect the customer to a hosted checkout, and receive a signed webhook after the payment settles. The settlement contracts are deployed on Arc mainnet (see `docs/DEPLOYMENTS.md`); the contracts are tested but have not had an independent third-party audit, so start with small payments. Developer docs live at `/docs` on the site.
 
 Built with [Arc Studio](https://studio.arc.io)
 
@@ -11,11 +11,11 @@ Built with [Arc Studio](https://studio.arc.io)
 - Worker: TypeScript on Bun with viem: chain scanner, settlement keeper, reconciliation and signed webhooks
 - Shared: zod schemas, viem
 - Contracts: Solidity 0.8.28 with Foundry and OpenZeppelin
-- Network: Arc Testnet only for now
+- Network: Arc mainnet (chain ID 5042) in production; Arc Testnet for rehearsals
 
 ## Pages
 
-The site serves `/` (landing), `/docs` (developer docs, pre-rendered at build time for search engines (served as docs.html so /docs has no redirect)), `/demo`, `/merchants` and `/pay/{id}` (hosted checkout).
+The site serves `/` (landing), `/docs` (developer docs, pre-rendered at build time for search engines), `/demo`, `/merchants` and `/pay/{id}` (hosted checkout).
 
 ## Development
 
@@ -59,5 +59,6 @@ Copy `.env.example` to `.env`. Never commit it.
 - `KEEPER_PRIVATE_KEY`, `ATTESTER_PRIVATE_KEY`, `ARC_RPC_FALLBACK_URLS`, `SCANNER_START_BLOCK`, `SCAN_INTERVAL_MS`, `KEEPER_INTERVAL_MS`, `RECONCILE_INTERVAL_MS`, `SCAN_MAX_BLOCKS`, `REPLAY_OVERLAP_BLOCKS`, `CONFIRMATIONS`, `MAX_FEE_PER_GAS_GWEI`, `MIN_KEEPER_BALANCE_USDC`, `CURSOR_LAG_ALERT_SECONDS`, `STUCK_SETTLEMENT_ALERT_SECONDS`, `ALERT_WEBHOOK_URL`, `RECOVERY_AUTOEXECUTE`, `HEALTH_PORT`: worker settings (see `.env.example`).
 - `DEMO_MERCHANT_API_KEY`, `DEMO_WEBHOOK_SECRET`, `DEMO_API_BASE_URL`: demo store settings, server side only.
 - `VITE_API_BASE`, `ACQUI_API_PROXY_TARGET`: optional frontend API prefix and dev proxy target.
+- `VITE_PUBLIC_API_URL`, `VITE_SITE_URL`: optional build-time overrides for the API and site addresses shown in the docs and dashboard examples (they default to the live addresses).
 - `API_ORIGIN` and `PROXY_SHARED_SECRET` (Cloudflare Pages settings, not read by the repo's own services): where the website's `/api` function forwards, and its shared secret with the API. `PROXY_SHARED_SECRET`, `CORS_ALLOWED_ORIGINS` and `COOKIE_SAME_SITE` are also read by the API. See `deploy/*.env.example`.
 - `INTEGRATION_DEPLOYER_KEY`, `INTEGRATION_ATTESTER_KEY`, `INTEGRATION_CUSTOMER_KEY`, `INTEGRATION_KEEPER_KEY`, `INTEGRATION_MERCHANT_ADDRESS`, `INTEGRATION_FEE_SAFE_ADDRESS`, `DISTRIBUTOR_ADDRESS`, `RPC_URL`: only for `integration:settle` against a live testnet.

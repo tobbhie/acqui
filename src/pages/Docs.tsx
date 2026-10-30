@@ -1,10 +1,10 @@
-import { useSyncExternalStore } from 'react'
 import { siteOrigin, usePageMeta } from '@/lib/meta'
 import { Link } from '@/lib/route'
 import { H2, H3, Ic, P, Step, Steps, Table } from '@/components/docs/Doc'
 import { DocCode } from '@/components/docs/DocCode'
 import { Callout, CheckoutMock, FeeSplit, FlowDiagram, StatusTrack } from '@/components/docs/Diagrams'
 import * as S from '@/pages/docs/snippets'
+import { ARC_MAINNET, PUBLIC_API_URL, explorerAddress } from '@/site'
 
 export const DOCS_TITLE = 'Acqui docs: accept USDC payments on Arc with one API'
 export const DOCS_DESCRIPTION =
@@ -17,26 +17,11 @@ const SECTIONS = [
   { id: 'webhooks', label: 'Webhooks' },
   { id: 'look-up-payments', label: 'Look up payments' },
   { id: 'fees-and-limits', label: 'Fees and limits' },
+  { id: 'arc-mainnet', label: 'Arc mainnet' },
   { id: 'late-and-partial', label: 'Late and partial payments' },
   { id: 'errors', label: 'Errors' },
   { id: 'go-live', label: 'Go-live checklist' },
 ] as const
-
-/** Shown after the page loads, so the text always matches the site you are reading. */
-function YourAddress() {
-  // Empty on the server-rendered page, the real address once the page runs in the browser.
-  const url = useSyncExternalStore(
-    () => () => undefined,
-    () => `${window.location.origin}/api`,
-    () => null,
-  )
-  if (!url) return null
-  return (
-    <Callout title="Your Acqui address">
-      <p>On this site, use <Ic>{url}</Ic> wherever the examples say <Ic>https://YOUR-SITE/api</Ic>.</p>
-    </Callout>
-  )
-}
 
 /** Structured data so search engines understand this is a technical article with a breadcrumb trail. */
 function JsonLd() {
@@ -94,8 +79,8 @@ export function Docs() {
           <p className="mt-4 max-w-[62ch] text-lg leading-8 text-[var(--ink-2)]">
             Your server creates a payment. Your customer pays on a hosted checkout page. You get USDC in your own wallet and a signed message telling you the order is paid.
           </p>
-          <Callout title="Test mode">
-            <p>While the footer of this site says <strong>Arc Testnet</strong>, every payment uses free test USDC. Build and try everything first. Test payments have <Ic>"livemode": false</Ic>.</p>
+          <Callout title="Live on Arc mainnet">
+            <p>Payments settle in real USDC on Arc mainnet and cannot be reversed. The smallest payment is 1.00 USDC, so a first end-to-end check costs very little. Live payments carry <Ic>"livemode": true</Ic>.</p>
           </Callout>
         </header>
 
@@ -105,6 +90,7 @@ export function Docs() {
         <P>You need three things: a merchant account (sign in with Google), a wallet address to receive payments, and an API key. The key stays on your server and is never put in a web page or mobile app.</P>
 
         <H2 id="quickstart">Quickstart</H2>
+        <P>Every request goes to <Ic>{PUBLIC_API_URL}</Ic> and carries your API key as <Ic>Authorization: Bearer aq_live_…</Ic>.</P>
         <Steps>
           <Step title="Set up your store">
             Open <Link to="/merchants" className="font-medium text-[var(--accent-hover)] underline">Merchants</Link>, sign in, and enter your store name, the wallet address that receives payments, and your website address (for example <Ic>https://shop.example.com</Ic>, with no path). Customers can only be sent back to that website.
@@ -119,7 +105,6 @@ export function Docs() {
             Redirect them to the <Ic>checkout_url</Ic> from the reply. That is the whole integration on the customer side.
           </Step>
         </Steps>
-        <YourAddress />
         <DocCode lang="bash" title="Terminal: set your values" code={S.ENV_SETUP} />
         <H3 id="create-payment">Create a payment</H3>
         <DocCode lang="bash" title="Terminal" code={S.CREATE_CURL} />
@@ -209,9 +194,41 @@ export function Docs() {
             ['You receive', 'The amount minus both fees. It is in the reply as merchant_net, and the fees are fixed when the payment is created.'],
             ['Smallest payment', '1.00 USDC.'],
             ['Payment window', '30 minutes from creation.'],
-            ['Money and network', 'USDC on Arc only.'],
+            ['Money and network', 'USDC on Arc mainnet only.'],
           ]}
         />
+
+        <H2 id="arc-mainnet">Arc mainnet</H2>
+        <P>Acqui settles on Arc mainnet. Each payment is real USDC, and every step can be checked on the public explorer.</P>
+        <Table
+          caption="Arc mainnet details"
+          head={['', 'Value']}
+          rows={[
+            ['Network', `${ARC_MAINNET.name}, chain ID ${ARC_MAINNET.chainId}`],
+            ['Money', 'USDC (6 decimals)'],
+            ['USDC contract', <a key="u" className="mono break-all text-[var(--accent-hover)] underline" href={explorerAddress(ARC_MAINNET.usdc)}>{ARC_MAINNET.usdc}</a>],
+            ['Acqui payment contract', <a key="p" className="mono break-all text-[var(--accent-hover)] underline" href={explorerAddress(ARC_MAINNET.paymentContract)}>{ARC_MAINNET.paymentContract}</a>],
+            ['Acqui fee recipient', <a key="f" className="mono break-all text-[var(--accent-hover)] underline" href={explorerAddress(ARC_MAINNET.feeRecipient)}>{ARC_MAINNET.feeRecipient}</a>],
+            ['Explorer', <a key="e" className="text-[var(--accent-hover)] underline" href={ARC_MAINNET.explorer}>{ARC_MAINNET.explorer}</a>],
+          ]}
+        />
+        <H3 id="check-on-explorer">Check a payment on the explorer</H3>
+        <Steps>
+          <Step title="Take the transaction hash">
+            It is <Ic>settlement.tx_hash</Ic> in the payment reply and <Ic>settlement_tx_hash</Ic> in the <Ic>payment.settled</Ic> message.
+          </Step>
+          <Step title="Open it">
+            Go to <Ic>{ARC_MAINNET.explorer}/tx/&lt;hash&gt;</Ic>. You will see the USDC move from the payment address to your payout wallet, with the Acqui fee and the network fee split off in the same transaction.
+          </Step>
+        </Steps>
+        <H3 id="mainnet-good-to-know">Good to know</H3>
+        <ul className="mt-3 list-disc space-y-2 pl-6 text-[15px] leading-7 text-[var(--ink-2)]">
+          <li>Every payment has its own address. Nobody holds a key to it: only the Acqui payment contract can move the money, and only to the wallet saved with the payment.</li>
+          <li>The Acqui payment contract has no admin and cannot be upgraded. The fee recipient above is fixed.</li>
+          <li>Settlement is approved by an Acqui signing key once the payment has arrived in time. That key can approve only payments that exist, never a different amount or wallet.</li>
+          <li>The USDC issuer can block wallets. If a wallet on the payment is blocked, the request fails with <Ic>address_blocklisted</Ic>.</li>
+          <li>The contracts are tested and reviewed in Arc Studio, but have not had an independent third-party audit yet. Start with small payments.</li>
+        </ul>
 
         <H2 id="late-and-partial">Late and partial payments</H2>
         <P>Customers sometimes pay too little, too late, or too much. Acqui never fulfils those orders for you and never keeps the money.</P>
@@ -252,7 +269,7 @@ export function Docs() {
           <li>Each order has its own <Ic>Idempotency-Key</Ic>, and a new payment is created after the window closes.</li>
           <li>You fulfil orders only on <Ic>payment.settled</Ic>, after checking the signature.</li>
           <li>Your webhook answers fast with <Ic>2xx</Ic> and ignores a delivery id it has already handled.</li>
-          <li>You have run a full test with test USDC, including a payment left to expire.</li>
+          <li>You have made one small live payment (1.00 USDC is the minimum), watched it reach <Ic>settled</Ic>, and opened its transaction on the explorer.</li>
           <li>Your payout wallet address is correct. A change needs a confirmation from your email.</li>
         </ul>
         <P>Want to see it working first? Try the <Link to="/demo" className="font-medium text-[var(--accent-hover)] underline">demo store</Link>, then <Link to="/merchants" className="font-medium text-[var(--accent-hover)] underline">set up your own</Link>.</P>

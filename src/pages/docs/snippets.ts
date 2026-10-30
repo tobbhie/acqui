@@ -1,7 +1,9 @@
+import { PUBLIC_API_URL, SITE_BASE_URL } from '@/site'
+
 /** Code samples shown in the docs. Plain strings so they are easy to review and copy exactly. */
 
-export const ENV_SETUP = `# Your Acqui address and the key from Merchants > Integration
-export ACQUI_API_URL="https://YOUR-SITE/api"
+export const ENV_SETUP = `# The Acqui API and the key from Merchants > Integration
+export ACQUI_API_URL="${PUBLIC_API_URL}"
 export ACQUI_API_KEY="aq_live_..."`
 
 export const CREATE_CURL = `curl -s "$ACQUI_API_URL/v1/payment-intents" \\
@@ -47,7 +49,7 @@ export const CREATE_RESPONSE = `{
   "amount": "10.00",
   "currency": "USDC",
   "order_id": "1001",
-  "checkout_url": "https://YOUR-SITE/pay/2ggMEd-POpOb4rGyiLDicw",
+  "checkout_url": "${SITE_BASE_URL}/pay/2ggMEd-POpOb4rGyiLDicw",
   "receiver_address": "0x79c8af998c81f6dad0e2015ae154aadb635cbee8",
   "expires_at": "2026-10-28T12:30:00.000Z",
   "fees": {
@@ -55,7 +57,8 @@ export const CREATE_RESPONSE = `{
     "keeper_reimbursement": "0.02",
     "merchant_net": "9.88"
   },
-  "livemode": false,
+  "chain_id": 5042,
+  "livemode": true,
   "settlement": null
 }`
 
@@ -91,7 +94,7 @@ export const WEBHOOK_EVENT = `{
     "keeper_reimbursement": "0.02",
     "net": "9.88",
     "network": "arc",
-    "chain_id": 5042002,
+    "chain_id": 5042,
     "settlement_tx_hash": "0x…",
     "settled_at": "2026-10-28T12:03:40.000Z"
   }

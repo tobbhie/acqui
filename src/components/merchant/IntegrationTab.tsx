@@ -1,7 +1,7 @@
 import { CodeBlock } from '@/components/ui'
 import { ApiKeysList } from '@/components/merchant/ApiKeysList'
 import { WebhookSettings } from '@/components/merchant/WebhookSettings'
-import { apiBaseForDocs } from '@/lib/api'
+import { PUBLIC_API_URL } from '@/site'
 import { sanitizeText } from '@/lib/format'
 import type { MerchantSettings } from '@/lib/types'
 
@@ -11,7 +11,7 @@ const h2 = 'display text-xl font-semibold'
 export function IntegrationTab({ merchant }: { merchant: MerchantSettings }) {
   const origin = merchant.allowed_return_origin ?? 'https://your-site.example'
   // The key is read from an environment variable on YOUR server. It is never pasted into a page or a URL.
-  const curl = `curl -X POST ${apiBaseForDocs()}/v1/payment-intents \\
+  const curl = `curl -X POST ${PUBLIC_API_URL}/v1/payment-intents \\
   -H "Authorization: Bearer $ACQUI_API_KEY" \\
   -H "Idempotency-Key: order-1001-attempt-1" \\
   -H "Content-Type: application/json" \\

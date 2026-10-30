@@ -39,11 +39,16 @@ export function Demo() {
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--subtle)]">Demo storefront</p>
         <h1 className="display mt-2 text-4xl font-bold sm:text-5xl">Acqui Demo Store</h1>
         <p className="mt-3 max-w-xl text-pretty text-[var(--ink-2)]">
-          A tiny store wired to Acqui the way your own site would be. Choosing Pay with USDC creates a real payment on {live === false ? 'Arc Testnet' : 'Arc'} and sends you to hosted checkout.
+          A tiny store wired to Acqui the way your own site would be. Choosing Pay with USDC creates a real payment on {live === false ? 'Arc Testnet' : 'Arc mainnet'} and sends you to hosted checkout.
           Nothing ships: this store exists to show the payment.
         </p>
       </header>
 
+      {config.data?.livemode && (
+        <Alert tone="warning" title="Live payments">
+          This demo runs on Arc mainnet, so checkout asks for real USDC (from 1.00 USDC). Nothing is shipped, and the payment settles to the demo merchant's wallet.
+        </Alert>
+      )}
       {config.data && !config.data.livemode && (
         <Alert tone="info" title="Test mode">This server runs on Arc Testnet. Testnet USDC has no real value.</Alert>
       )}

@@ -49,6 +49,7 @@ export function PayInstructions({ payment, networkName }: { payment: PublicPayme
         <ul className="list-disc space-y-1 pl-4">
           <li><strong>Only send USDC on Arc to this address.</strong> This checkout uses {networkName} (chain ID {payment.chain_id}); other networks and tokens are not recovered automatically.</li>
           <li>Send the full amount in one transfer, from a wallet or exchange account that supports {networkName}.</li>
+          {payment.livemode && <li>This is a live payment: you are sending real USDC, and a transfer cannot be reversed. Check the address and network before you confirm.</li>}
           <li>Transfers that arrive after the countdown ends are not credited to this order. They are returned through the refund process, which takes time.</li>
         </ul>
       </Alert>

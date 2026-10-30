@@ -89,6 +89,7 @@ void describe('hosted checkout rendering', () => {
   void it('labels mainnet without a test-mode banner', () => {
     const html = render({ status: 'awaiting_payment', override: { livemode: true, chain_id: 5042 } })
     assert.ok(!html.includes('Test mode'))
-    assert.ok(html.includes('chain ID 5042'))
+    assert.ok(html.includes('chain ID 5042') && html.includes('Arc mainnet'))
+    assert.ok(html.includes('live payment') && html.includes('cannot be reversed'))
   })
 })

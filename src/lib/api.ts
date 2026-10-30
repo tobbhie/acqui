@@ -62,4 +62,3 @@ export async function api<T>(path: string, { method = 'GET', body, signal }: Req
 }
 
 export const googleLoginUrl = `${BASE}/auth/google/start`
-export const apiBaseForDocs = (): string => (BASE.startsWith('http') ? BASE : `${window.location.origin}${BASE}`)

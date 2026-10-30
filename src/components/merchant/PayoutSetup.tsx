@@ -25,7 +25,7 @@ export function PayoutSetup() {
   const invalid = address.length > 0 && !looksLikeAddress(address)
   const ready = looksLikeAddress(address) && !mismatch && ack
   const submit = (e: FormEvent) => { e.preventDefault(); if (ready) set.mutate() }
-  const network = config.data?.livemode ? 'Arc' : 'Arc Testnet'
+  const network = config.data?.livemode ? 'Arc mainnet' : 'Arc Testnet'
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -36,7 +36,7 @@ export function PayoutSetup() {
         value={again} onChange={(e) => setAgain(e.target.value)} error={mismatch ? 'The two addresses do not match' : null} />
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} className="mt-0.5 size-5" />
-        <span>I checked this address and it is on {network}. Payments are sent here, and changing it later needs confirmation by email. Funds sent to a wrong address cannot be recovered.</span>
+        <span>I checked this address and it is on {network}. {config.data?.livemode ? 'Real USDC is sent here. ' : 'Payments are sent here. '}Changing it later needs confirmation by email, and funds sent to a wrong address cannot be recovered.</span>
       </label>
       {set.isError && <Alert tone="danger">{errorMessage(set.error)}</Alert>}
       <Button type="submit" busy={set.isPending} disabled={!ready}>Save payout address</Button>
