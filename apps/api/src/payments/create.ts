@@ -18,8 +18,9 @@ export interface CreateResult {
   replayed: boolean;
 }
 
-const selectByKey = (q: Q, merchantId: string, key: string) => q<(PaymentRow & { request_hash: Buffer })[]>`
-  SELECT * FROM payment_intents WHERE merchant_id = ${merchantId} AND idempotency_key = ${key}`;
+const selectByKey = (q: Q, merchantId: string, chainId: number, key: string) => q<(PaymentRow & { request_hash: Buffer })[]>`
+  SELECT * FROM payment_intents
+  WHERE merchant_id = ${merchantId} AND chain_id = ${chainId} AND idempotency_key = ${key}`;
 
 function requestHash(input: CreatePaymentIntentInput): Buffer {
   return sha256(JSON.stringify([
@@ -50,10 +51,9 @@ export async function createPaymentIntent(
   const hash = requestHash(input);
 
   // A retry with the same key returns the stored intent, even after it has expired. A new attempt needs a new key.
-  const prior = replay((await selectByKey(db, merchant.id, idempotencyKey))[0], hash);
-  if (prior) return prior;
-
   if (!contracts) throw unavailable('contracts_not_configured', 'Payment contracts are not configured or could not be verified');
+  const prior = replay((await selectByKey(db, merchant.id, contracts.chainId, idempotencyKey))[0], hash);
+  if (prior) return prior;
   const reimbursement = config.KEEPER_REIMBURSEMENT_USDC;
   if (reimbursement === undefined) throw unavailable('keeper_reimbursement_not_configured', 'Keeper reimbursement is not configured');
   if (reimbursement > contracts.maxKeeperReimbursement) {
@@ -125,7 +125,7 @@ export async function createPaymentIntent(
   } catch (error) {
     // Concurrent request with the same key: the unique constraint decides, the loser returns the winner's row.
     if (isUniqueViolation(error, 'payment_intents_idem')) {
-      const winner = replay((await selectByKey(db, merchant.id, idempotencyKey))[0], hash);
+      const winner = replay((await selectByKey(db, merchant.id, contracts.chainId, idempotencyKey))[0], hash);
       if (winner) return winner;
     }
     throw error;

@@ -14,9 +14,8 @@ A throwaway wallet has no power over the contracts after deployment (they have n
 ## Deploy
 Run the helper script yourself in the Code panel terminal. It checks the chain ID (5042), that USDC at `0x3600…0000` answers with 6 decimals, that the fee recipient has contract code, that the deployer holds enough USDC, and that the attester differs from the fee recipient and the deployer. It shows the full plan and only continues after you type `DEPLOY`. Afterwards it reads the contract back and compares USDC, attester, fee recipient, factory and chain ID, then writes `.mainnet-deployer/deployment.json`.
 
-    export PRIVATE_KEY=0x...   # your deployer key, from your own storage
-    export ATTESTER=0x...      # new mainnet signing address
-    export FEE_SAFE=0x...      # fee recipient, permanent
+If the keys and fee Safe are already in the ignored `.env` block headed exactly `# Mainnet`, the helper reads `INTEGRATION_DEPLOYER_KEY`, `ATTESTER_PRIVATE_KEY`, and `FEE_RECIPIENT_SAFE` from there without printing them. Explicitly exported `PRIVATE_KEY`, `ATTESTER`, and `FEE_SAFE` still take precedence.
+
     DRY_RUN=1 bash scripts/deploy-mainnet.sh    # checks only, sends nothing
     bash scripts/deploy-mainnet.sh              # the real deployment
 
@@ -27,5 +26,6 @@ The script was rehearsed on Arc Testnet (all read-back checks passed) but never 
 ## After deploying
 - Record the distributor address and its deployment block. The factory address is derived from the distributor (created by it, nonce 1) and is checked by the API and worker at startup.
 - Set \`DISTRIBUTOR_ADDRESS\` and \`DISTRIBUTOR_DEPLOY_BLOCK\` for the API and worker. They refuse to start if the chain ID, USDC address, attester or factory do not match.
+- Set \`SCANNER_START_BLOCK\` to the same deployment block for the first mainnet worker start. The existing testnet scanner cursor is retained under chain ID 5042002 and cannot advance the mainnet cursor (chain ID 5042).
 - Confirm on the explorer: chain ID, \`FEE_SAFE\`, \`ATTESTER\`, \`USDC\`, \`DEPLOYED_CHAIN_ID\`.
 - Run a small live payment end to end and keep the public transaction hashes for the submission.

@@ -15,8 +15,8 @@ const secret32 = z.string().min(32, 'must be at least 32 characters');
 
 const baseShape = {
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  /** Only arc-testnet is accepted until mainnet is explicitly unlocked. */
-  ACQUI_NETWORK: z.enum(['arc-testnet']).default('arc-testnet'),
+  /** Mainnet is selected explicitly; testnet remains the safe default. */
+  ACQUI_NETWORK: z.enum(['arc-testnet', 'arc-mainnet']).default('arc-testnet'),
   DATABASE_URL: z.string().url().startsWith('postgres', 'must be a postgres:// URL'),
   /** Managed Arc RPC. Required in production; otherwise the public fallback is used. */
   ARC_RPC_URL: z.string().url().optional(),

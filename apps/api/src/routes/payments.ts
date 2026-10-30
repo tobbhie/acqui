@@ -16,6 +16,7 @@ export function viewContext(deps: AppDeps): ViewContext {
 /** Merchant API. Every handler reads the merchant from the credential, never from the request. */
 export function paymentRoutes(deps: AppDeps): Hono<HonoEnv> {
   const app = new Hono<HonoEnv>();
+  const chainId = getNetwork(deps.config.ACQUI_NETWORK).chainId;
   app.use('*', requireMerchantAuth(deps));
 
   app.post('/payment-intents', async (c) => {
@@ -30,14 +31,14 @@ export function paymentRoutes(deps: AppDeps): Hono<HonoEnv> {
 
   app.get('/payment-intents/:id', async (c) => {
     const id = parsePaymentId(c.req.param('id'));
-    const row = id ? await getPaymentForMerchant(deps.db, c.get('merchant').id, id) : null;
+    const row = id ? await getPaymentForMerchant(deps.db, c.get('merchant').id, chainId, id) : null;
     if (!row) throw notFound('Payment not found');
     return c.json(merchantView(row, viewContext(deps)));
   });
 
   app.get('/payments', async (c) => {
     const q = validate(listPaymentsQuerySchema, c.req.query());
-    const { rows, nextCursor } = await listPayments(deps.db, c.get('merchant').id, q);
+    const { rows, nextCursor } = await listPayments(deps.db, c.get('merchant').id, chainId, q);
     const ctx = viewContext(deps);
     return c.json({ data: rows.map((r) => merchantView(r, ctx)), next_cursor: nextCursor });
   });

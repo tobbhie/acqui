@@ -4,8 +4,9 @@ import type { PaymentStatus } from './state';
 import type { PaymentRow, PublicRow } from './views';
 
 /** Every merchant query carries merchant_id: a payment of another merchant is indistinguishable from a missing one. */
-export async function getPaymentForMerchant(q: Q, merchantId: string, id: string): Promise<PaymentRow | null> {
-  const rows = await q<PaymentRow[]>`SELECT * FROM payment_intents WHERE id = ${id} AND merchant_id = ${merchantId}`;
+export async function getPaymentForMerchant(q: Q, merchantId: string, chainId: number, id: string): Promise<PaymentRow | null> {
+  const rows = await q<PaymentRow[]>`
+    SELECT * FROM payment_intents WHERE id = ${id} AND merchant_id = ${merchantId} AND chain_id = ${chainId}`;
   return rows[0] ?? null;
 }
 
@@ -24,12 +25,13 @@ function decodeCursor(cursor: string): { createdAt: Date; id: string } {
 export async function listPayments(
   q: Q,
   merchantId: string,
+  chainId: number,
   opts: { limit: number; cursor?: string | undefined; status?: PaymentStatus | undefined },
 ): Promise<{ rows: PaymentRow[]; nextCursor: string | null }> {
   const after = opts.cursor ? decodeCursor(opts.cursor) : null;
   const rows = await q<PaymentRow[]>`
     SELECT * FROM payment_intents
-    WHERE merchant_id = ${merchantId}
+    WHERE merchant_id = ${merchantId} AND chain_id = ${chainId}
       ${opts.status ? q`AND status = ${opts.status}` : q``}
       ${after ? q`AND (created_at, id) < (${after.createdAt}, ${after.id})` : q``}
     ORDER BY created_at DESC, id DESC

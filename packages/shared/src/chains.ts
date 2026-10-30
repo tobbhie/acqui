@@ -35,6 +35,8 @@ const DOCS = 'https://docs.arc.io/arc/references';
 
 const testnetFacts = requireChain(5042002);
 if (!testnetFacts.usdc) throw new Error('Arc Studio registry has no USDC for Arc Testnet');
+const mainnetFacts = requireChain(5042);
+if (!mainnetFacts.usdc) throw new Error('Arc Studio registry has no USDC for Arc Mainnet');
 
 export const ARC_TESTNET: AcquiNetworkConfig = {
   id: 'arc-testnet',
@@ -58,12 +60,31 @@ export const ARC_TESTNET: AcquiNetworkConfig = {
   ],
 };
 
-/**
- * Arc mainnet is intentionally absent. It is unlocked only after the user has acknowledged the
- * mainnet warning and every item in the mainnet verification checklist (see docs/OPEN_QUESTIONS.md).
- */
+export const ARC_MAINNET: AcquiNetworkConfig = {
+  id: 'arc-mainnet',
+  chainId: mainnetFacts.chainId,
+  name: mainnetFacts.name,
+  isMainnet: true,
+  usdcErc20: mainnetFacts.usdc.address as Address,
+  usdcErc20Decimals: 6,
+  nativeDecimals: 18,
+  nativeTransferEmitter: '0xffffFFFfFFffffffffffffffFfFFFfffFFFfFFfE',
+  explorerBase: mainnetFacts.explorerBase,
+  publicRpcUrls: mainnetFacts.rpcUrls,
+  confirmations: 1,
+  verification: [
+    { id: 'chain-id', description: 'eth_chainId returns 5042', status: 'verified', source: `${DOCS}/rpc-endpoints.md` },
+    { id: 'usdc-erc20', description: 'USDC ERC-20 address and 6-decimal view', status: 'verified', source: `${DOCS}/contract-addresses.md` },
+    { id: 'native-emitter', description: 'System emitter logs 18-decimal Transfer for USDC movements', status: 'verified', source: `${DOCS}/usdc-system-events.md` },
+    { id: 'double-log', description: 'One ERC-20 transfer() emits two logs (6 and 18 decimals): count once', status: 'verified', source: `${DOCS}/usdc-system-events.md` },
+    { id: 'finality', description: 'Runtime confirmation depth for settlement', status: 'unverified', source: 'https://docs.arc.io/arc/concepts/deterministic-finality.md' },
+    { id: 'fee-floor', description: 'Keeper transaction fee-floor behavior', status: 'unverified', source: `${DOCS}/evm-differences.md` },
+  ],
+};
+
 export const NETWORKS: Readonly<Record<NetworkId, AcquiNetworkConfig>> = {
   'arc-testnet': ARC_TESTNET,
+  'arc-mainnet': ARC_MAINNET,
 };
 
 export function getNetwork(id: NetworkId): AcquiNetworkConfig {

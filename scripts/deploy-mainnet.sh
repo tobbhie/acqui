@@ -11,6 +11,20 @@
 # ARC_MAINNET_RPC_URL, USDC, ALLOW_EOA_FEE_SAFE=1 (accept a fee recipient without contract code), DRY_RUN=1 (checks only, sends nothing).
 set -euo pipefail
 
+# When values are not already exported, load only the named entries from the local Mainnet block.
+# Values are never echoed. The .env file is ignored by git and remains the operator's secret store.
+mainnet_env_value() {
+  [ -f .env ] || return 0
+  awk -F= -v wanted="$1" '
+    /^# Mainnet\r?$/ { in_mainnet=1; next }
+    in_mainnet && $1 == wanted { sub(/^[^=]*=/, ""); sub(/\r$/, ""); print; exit }
+  ' .env
+}
+
+PRIVATE_KEY="${PRIVATE_KEY:-$(mainnet_env_value INTEGRATION_DEPLOYER_KEY)}"
+ATTESTER_PRIVATE_KEY="${ATTESTER_PRIVATE_KEY:-$(mainnet_env_value ATTESTER_PRIVATE_KEY)}"
+FEE_SAFE="${FEE_SAFE:-$(mainnet_env_value FEE_RECIPIENT_SAFE)}"
+
 RPC_URL="${ARC_MAINNET_RPC_URL:-https://rpc.mainnet.arc.io}"   # Circle docs: Connect to Arc, Mainnet
 EXPECTED_CHAIN_ID="${EXPECTED_CHAIN_ID:-5042}"                # Circle docs: Arc Mainnet chain ID
 USDC="${USDC:-0x3600000000000000000000000000000000000000}"    # Circle docs: Contract addresses, Mainnet USDC (6-decimal ERC-20 view)
@@ -23,7 +37,11 @@ need() { [ -n "${!1:-}" ] || fail "$1 is not set"; }
 lower() { echo "$1" | tr 'A-F' 'a-f'; }
 
 command -v forge >/dev/null && command -v cast >/dev/null || fail "forge and cast are required"
-need PRIVATE_KEY; need ATTESTER; need FEE_SAFE
+need PRIVATE_KEY; need FEE_SAFE
+if [ -z "${ATTESTER:-}" ]; then
+  need ATTESTER_PRIVATE_KEY
+  ATTESTER="$(cast wallet address --private-key "$ATTESTER_PRIVATE_KEY")"
+fi
 cast to-check-sum-address "$ATTESTER" >/dev/null 2>&1 || fail "ATTESTER is not a valid address"
 cast to-check-sum-address "$FEE_SAFE" >/dev/null 2>&1 || fail "FEE_SAFE is not a valid address"
 [ "$(lower "$ATTESTER")" != "$(lower "$FEE_SAFE")" ] || fail "ATTESTER and FEE_SAFE must differ"
@@ -42,9 +60,8 @@ if [ "$(cast code "$FEE_SAFE" --rpc-url "$RPC_URL")" = "0x" ] && [ "${ALLOW_EOA_
   fail "FEE_SAFE has no contract code on this chain. Is the Safe deployed here? Set ALLOW_EOA_FEE_SAFE=1 only if a plain wallet is intended"
 fi
 BALANCE_WEI="$(cast balance "$DEPLOYER" --rpc-url "$RPC_URL")"
-python3 - "$BALANCE_WEI" <<'PY' || fail "deployer balance is below 0.10 USDC; fund it with about 0.30 USDC"
-import sys; sys.exit(0 if int(sys.argv[1]) >= 10**17 else 1)
-PY
+BALANCE_DEC="$(cast to-dec "$BALANCE_WEI")"
+[ "$BALANCE_DEC" -ge 100000000000000000 ] || fail "deployer balance is below 0.10 USDC; fund it with about 0.30 USDC"
 
 cat <<SUMMARY
 
@@ -69,8 +86,8 @@ forge build >/dev/null
 RESULT="$(forge create contracts/PaymentDistributor.sol:PaymentDistributor \
   --rpc-url "$RPC_URL" --private-key "$PRIVATE_KEY" --broadcast --json \
   --constructor-args "$USDC" "$ATTESTER" "$FEE_SAFE" "$MAX_KEEPER_REIMBURSEMENT_UNITS" "$RECOVERY_DELAY_SECONDS")"
-DISTRIBUTOR="$(echo "$RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["deployedTo"])')"
-TX="$(echo "$RESULT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["transactionHash"])')"
+DISTRIBUTOR="$(echo "$RESULT" | node -e 'let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).deployedTo))')"
+TX="$(echo "$RESULT" | node -e 'let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).transactionHash))')"
 BLOCK="$(cast receipt "$TX" blockNumber --rpc-url "$RPC_URL")"
 FACTORY_EXPECTED="$(cast compute-address "$DISTRIBUTOR" --nonce 1 | awk '{print $NF}')"
 
@@ -86,11 +103,11 @@ check FACTORY "$FACTORY_EXPECTED" "$(cast call "$DISTRIBUTOR" 'FACTORY()(address
 check DEPLOYED_CHAIN_ID "$CHAIN_ID" "$(cast call "$DISTRIBUTOR" 'DEPLOYED_CHAIN_ID()(uint256)' --rpc-url "$RPC_URL" | awk '{print $1}')"
 
 mkdir -p "$OUT_DIR"
-python3 - "$OUT_DIR/deployment.json" "$CHAIN_ID" "$DISTRIBUTOR" "$FACTORY_EXPECTED" "$BLOCK" "$TX" "$DEPLOYER" "$USDC" "$ATTESTER" "$FEE_SAFE" "$MAX_KEEPER_REIMBURSEMENT_UNITS" "$RECOVERY_DELAY_SECONDS" <<'PY'
-import json, sys
-k = ["chainId","distributor","factory","deploymentBlock","deploymentTx","deployer","usdc","attester","feeSafe","maxKeeperReimbursementUnits","recoveryDelaySeconds"]
-json.dump(dict(zip(k, sys.argv[2:])), open(sys.argv[1], "w"), indent=2); open(sys.argv[1], "a").write("\n")
-PY
+node - "$OUT_DIR/deployment.json" "$CHAIN_ID" "$DISTRIBUTOR" "$FACTORY_EXPECTED" "$BLOCK" "$TX" "$DEPLOYER" "$USDC" "$ATTESTER" "$FEE_SAFE" "$MAX_KEEPER_REIMBURSEMENT_UNITS" "$RECOVERY_DELAY_SECONDS" <<'JS'
+const fs = require('node:fs');
+const keys = ['chainId','distributor','factory','deploymentBlock','deploymentTx','deployer','usdc','attester','feeSafe','maxKeeperReimbursementUnits','recoveryDelaySeconds'];
+fs.writeFileSync(process.argv[2], `${JSON.stringify(Object.fromEntries(keys.map((key, i) => [key, process.argv[i + 3]])), null, 2)}\n`);
+JS
 
 if [ "$CHAIN_ID" = "5042" ]; then EXPLORER="https://explorer.arc.io"; else EXPLORER="https://explorer.testnet.arc.io"; fi
 cat <<DONE

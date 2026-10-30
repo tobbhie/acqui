@@ -21,8 +21,8 @@ void describe('loadApiConfig', () => {
   void it('lists every missing variable', () => {
     assert.throws(() => loadApiConfig({}), (error: unknown) => error instanceof ConfigError && error.issues.length >= 5);
   });
-  void it('refuses mainnet until it is unlocked', () => {
-    assert.throws(() => loadApiConfig({ ...validApi, ACQUI_NETWORK: 'arc-mainnet' }), ConfigError);
+  void it('accepts mainnet only when selected explicitly', () => {
+    assert.equal(loadApiConfig({ ...validApi, ACQUI_NETWORK: 'arc-mainnet' }).ACQUI_NETWORK, 'arc-mainnet');
   });
   void it('requires a managed RPC in production', () => {
     assert.throws(() => loadApiConfig({ ...validApi, NODE_ENV: 'production' }), ConfigError);

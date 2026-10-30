@@ -6,7 +6,7 @@ export type Hex = `0x${string}`;
 /** Integer USDC base units (6 decimals) serialized as a decimal string. */
 export type UsdcBaseUnits = string;
 
-export type NetworkId = 'arc-testnet';
+export type NetworkId = 'arc-testnet' | 'arc-mainnet';
 
 export interface Merchant {
   id: string;

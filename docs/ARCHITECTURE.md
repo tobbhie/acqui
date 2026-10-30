@@ -38,7 +38,7 @@ A merchant integrates a server-side API and redirects the customer to hosted che
 
 ## Mainnet
 
-Locked. `ACQUI_NETWORK` accepts only `arc-testnet`, and `packages/shared/src/chains.ts` has no mainnet entry. It is added after you acknowledge the mainnet warning and complete the verification checklist.
+Mainnet is explicitly selected with `ACQUI_NETWORK=arc-mainnet`; testnet remains the default. Startup verifies the live RPC chain ID, USDC, distributor deployment chain, attester, fee Safe, and derived factory before serving payments.
 
 ## Contracts (Step 02)
 
