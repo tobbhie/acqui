@@ -14,14 +14,17 @@ A throwaway wallet has no power over the contracts after deployment (they have n
     export PRIVATE_KEY=$(cat .mainnet-deployer/deployer-key.txt)
 
 ## Deploy
-Take the RPC URL and the USDC address from Circle's official Arc documentation, not from memory, and keep the key in an environment variable:
+Run the helper script yourself in the Code panel terminal. It checks the chain ID (5042), that USDC at `0x3600…0000` answers with 6 decimals, that the fee recipient has contract code, that the deployer holds enough USDC, and that the attester differs from the fee recipient and the deployer. It shows the full plan and only continues after you type `DEPLOY`. Afterwards it reads the contract back and compares USDC, attester, fee recipient, factory and chain ID, then writes `.mainnet-deployer/deployment.json`.
 
-    forge build
-    forge create contracts/PaymentDistributor.sol:PaymentDistributor \
-      --rpc-url "$ARC_MAINNET_RPC_URL" --private-key "$PRIVATE_KEY" --broadcast \
-      --constructor-args "$USDC" "$ATTESTER" "$FEE_SAFE" "$MAX_KEEPER_REIMBURSEMENT_UNITS" "$RECOVERY_DELAY_SECONDS"
+    export PRIVATE_KEY=$(cat .mainnet-deployer/deployer-key.txt)
+    export ATTESTER=0x...      # new mainnet signing address
+    export FEE_SAFE=0x...      # fee recipient, permanent
+    DRY_RUN=1 bash scripts/deploy-mainnet.sh    # checks only, sends nothing
+    bash scripts/deploy-mainnet.sh              # the real deployment
 
-Constructor arguments in order: USDC, attester, fee Safe, max keeper reimbursement (6-decimal units, for example 50000), recovery delay (seconds).
+The RPC URL (`https://rpc.mainnet.arc.io`), chain ID (5042) and USDC address come from Circle's "Connect to Arc" and "Contract addresses" pages. Override the RPC with `ARC_MAINNET_RPC_URL` if you use a provider. Defaults: max keeper reimbursement 50000 units (0.05 USDC), recovery delay 86400 seconds.
+
+The script was rehearsed on Arc Testnet (all read-back checks passed) but never run against mainnet by Arc Studio.
 
 ## After deploying
 - Record the distributor address and its deployment block. The factory address is derived from the distributor (created by it, nonce 1) and is checked by the API and worker at startup.
