@@ -16,3 +16,4 @@ design-qa-*.png
 acqui/
 contracts/contract-metadata/*.json
 .wrangler
+.mainnet-deployer/

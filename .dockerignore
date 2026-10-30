@@ -32,3 +32,4 @@ recovery_file*
 **/*.test.ts
 **/*.test.tsx
 .wrangler
+.mainnet-deployer
