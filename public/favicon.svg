@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Acqui">
-  <title>Acqui</title>
-  <path fill="#112D45" d="M103 407V190C103 125 178 62 280 31C320 20 352 36 368 52L305 62C245 66 178 120 178 215V457Z"/>
-  <path fill="#fff" stroke="#fff" stroke-width="12" stroke-linejoin="round" d="M178 457V215C178 120 245 66 305 62C365 60 414 100 414 160V385L374 408V160C374 125 345 110 310 112C268 114 222 150 222 215V431Z"/>
-  <path fill="#2A68E8" d="M178 457V215C178 120 245 66 305 62C365 60 414 100 414 160V385L374 408V160C374 125 345 110 310 112C268 114 222 150 222 215V431Z"/>
-  <path fill="#B9D3FC" stroke="#B9D3FC" stroke-width="8" stroke-linejoin="round" d="M287 203L363 243V388L287 346Z"/>
-</svg>
