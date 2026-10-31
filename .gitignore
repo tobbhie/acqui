@@ -17,3 +17,4 @@ acqui/
 contracts/contract-metadata/*.json
 .wrangler
 .mainnet-deployer/
+.verify/

@@ -29,3 +29,10 @@ The script was rehearsed on Arc Testnet (all read-back checks passed) but never 
 - Set \`SCANNER_START_BLOCK\` to the same deployment block for the first mainnet worker start. The existing testnet scanner cursor is retained under chain ID 5042002 and cannot advance the mainnet cursor (chain ID 5042).
 - Confirm on the explorer: chain ID, \`FEE_SAFE\`, \`ATTESTER\`, \`USDC\`, \`DEPLOYED_CHAIN_ID\`.
 - Run a small live payment end to end and keep the public transaction hashes for the submission.
+
+## Publish the source on the explorer
+Verification is not a transaction and needs no key. It lets anyone read the code behind the addresses.
+
+    NETWORK=mainnet DISTRIBUTOR=0x... ATTESTER=0x... FEE_SAFE=0x... bash scripts/verify-contracts.sh
+
+It verifies the distributor and the factory it created (the per-payment receivers share the factory's code). If the explorer's API refuses scripted requests, run it with `MANUAL=1` and upload the generated files in the explorer's "Verify & Publish" form (method: Solidity Standard JSON input, compiler `v0.8.28+commit.7893614a`). The script was tested on Arc Testnet, where both contracts verified with an exact match.
