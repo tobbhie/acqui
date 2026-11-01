@@ -193,10 +193,6 @@ export function Landing() {
             </li>
           ))}
         </ol>
-
-        <p className="mx-auto mt-12 max-w-3xl border-l-4 border-blue-600 pl-5 text-lg font-medium leading-8 text-[var(--ink)]">
-          Acqui works behind your storefront—not instead of it. Customers remain in your purchase journey, and your team continues managing orders through the systems it already uses.
-        </p>
       </section>
 
       <section className="border-b border-[var(--border)] py-20" aria-labelledby="payment-networks-heading">

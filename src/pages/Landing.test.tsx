@@ -30,9 +30,9 @@ void describe('landing: how it works', () => {
     }
   })
 
-  void it('ends with the line that keeps the merchant in control of the journey', () => {
-    assert.ok(text.includes('Acqui works behind your storefront—not instead of it.'))
-    assert.ok(text.includes('your team continues managing orders through the systems it already uses'))
+  void it('does not carry the old closing statement', () => {
+    assert.ok(!text.includes('Acqui works behind your storefront'))
+    assert.ok(!html.includes('systems it already uses'))
   })
 
   void it('no longer starts the story at the customer', () => {
