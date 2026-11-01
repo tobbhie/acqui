@@ -31,10 +31,11 @@ const CAPABILITIES = [
 ]
 
 const PAYMENT_FLOW = [
-  { icon: UserRound, title: 'Customer pays crypto', body: 'Your customer completes payment using their preferred crypto wallet.', note: 'Any wallet' },
-  { icon: Link2, title: 'Acqui checkout', body: 'We handle payment processing, confirmations and risk management.', note: 'Hosted checkout + API' },
-  { icon: TokenUSDC, title: 'USDC on Arc', body: 'Payments settle in USDC on Arc.', note: 'Live today', live: true },
-  { icon: Store, title: 'Your business', body: 'You receive USDC in your business wallet, with transparent fees.', note: 'Your wallet' },
+  { icon: Code2, who: 'Your team', title: 'Integrate Acqui', body: 'Add the API and hosted checkout to your existing website or application. Your products, orders and customer experience remain yours.', note: 'API + hosted checkout' },
+  { icon: Link2, who: 'Your backend', title: 'Create a payment', body: 'When a customer chooses crypto at checkout, your server creates an Acqui payment linked to the order amount and settlement address.', note: 'Created from your backend' },
+  { icon: UserRound, who: 'Your storefront', title: 'Customer completes checkout', body: 'The customer opens the secure payment page and sends USDC from a compatible wallet. They do not need an Acqui account.', note: 'No customer signup' },
+  { icon: ShieldCheck, who: 'Acqui, in the background', title: 'Acqui verifies the payment', body: 'Acqui monitors the payment on Arc, detects underpayments or overpayments, waits for confirmation and completes settlement onchain.', note: 'Onchain verification', behind: true },
+  { icon: WalletCards, who: 'Your systems', title: 'Your business gets paid', body: 'USDC is delivered to your business wallet, and Acqui notifies your backend through a signed webhook so your existing order flow can continue automatically.', note: 'USDC + webhook', live: true },
 ]
 
 const FACTS = [
@@ -122,24 +123,30 @@ export function Landing() {
 
       <section id="how-it-works" className="scroll-mt-24 border-b border-[var(--border)] py-20" aria-labelledby="payment-flow-heading">
         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
-        <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">From customer payment to business settlement.</h2>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">A single, streamlined flow. Your customer pays with crypto, Acqui handles the complexity, and you receive USDC on Arc in your business wallet.</p>
+        <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">Add crypto payments to the checkout you already have.</h2>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
 
-        <ol className="mt-12 grid gap-4 md:grid-cols-4">
+        <ol className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {PAYMENT_FLOW.map((item, index) => (
             <li key={item.title} className="relative">
-              <div className={`h-full min-h-64 rounded-2xl border p-6 text-center ${item.live ? 'border-emerald-200 bg-emerald-50/70' : 'border-[var(--border)] bg-white/60'}`}>
-                <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600">
-                  <item.icon {...(item.icon === TokenUSDC ? { variant: 'branded' as const } : {})} size={26} aria-hidden />
-                </span>
-                <h3 className="display mt-6 text-lg font-semibold">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--ink-2)]">{item.body}</p>
-                <span className={`mt-6 inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${item.live ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{item.note}</span>
+              <div className={`flex h-full flex-col rounded-2xl border p-6 ${item.behind ? 'border-blue-200 bg-blue-50/70' : item.live ? 'border-emerald-200 bg-emerald-50/70' : 'border-[var(--border)] bg-white/60'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="grid size-11 place-items-center rounded-2xl bg-white text-blue-600 shadow-sm"><item.icon size={22} aria-hidden /></span>
+                  <span className="mono text-xs font-semibold text-[var(--subtle)]" aria-hidden>0{index + 1}</span>
+                </div>
+                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">{item.who}</p>
+                <h3 className="display mt-1 text-lg font-semibold leading-snug"><span className="sr-only">Step {index + 1}: </span>{item.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-[var(--ink-2)]">{item.body}</p>
+                <span className={`mt-5 inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${item.behind ? 'bg-blue-100 text-blue-700' : item.live ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{item.note}</span>
               </div>
-              {index < PAYMENT_FLOW.length - 1 && <ArrowRight className="absolute -right-5 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-1 text-[var(--ink)] md:block" size={24} aria-hidden />}
+              {index < PAYMENT_FLOW.length - 1 && <ArrowRight className="absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-1 text-[var(--ink)] lg:block" size={22} aria-hidden />}
             </li>
           ))}
         </ol>
+
+        <p className="mx-auto mt-12 max-w-3xl border-l-4 border-blue-600 pl-5 text-lg font-medium leading-8 text-[var(--ink)]">
+          Acqui works behind your storefront—not instead of it. Customers remain in your purchase journey, and your team continues managing orders through the systems it already uses.
+        </p>
       </section>
 
       <section className="border-b border-[var(--border)] py-20" aria-labelledby="payment-networks-heading">
