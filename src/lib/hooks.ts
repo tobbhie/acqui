@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api, ApiRequestError, setCsrfToken } from '@/lib/api'
 import type { PublicConfig, SessionInfo } from '@/lib/types'
@@ -36,6 +36,28 @@ export function useNow(intervalMs = 1000): number {
     return () => window.clearInterval(id)
   }, [intervalMs])
   return now
+}
+
+/**
+ * True once the element has scrolled into view, and stays true. Without IntersectionObserver (old browsers, tests)
+ * it is true immediately, so nothing is ever left hidden.
+ */
+export function useRevealOnce<T extends HTMLElement>(threshold = 0.35): [(node: T | null) => void, boolean] {
+  const [shown, setShown] = useState(() => typeof IntersectionObserver === 'undefined')
+  const observer = useRef<IntersectionObserver | null>(null)
+  const ref = useCallback((node: T | null) => {
+    observer.current?.disconnect()
+    observer.current = null
+    if (!node || typeof IntersectionObserver === 'undefined') return
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setShown(true)
+        observer.current?.disconnect()
+      }
+    }, { threshold })
+    observer.current.observe(node)
+  }, [threshold])
+  return [ref, shown]
 }
 
 export const errorMessage = (error: unknown): string =>

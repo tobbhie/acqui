@@ -76,4 +76,22 @@ void describe('landing: how it works', () => {
       assert.ok(body.length > 0 && body.length <= 110, `card copy too long (${body.length}): ${body}`)
     }
   })
+
+  void it('fills the space under the heading with the merchant side of the story, wide screens only', () => {
+    const side = /<div class="hidden xl:block"><div aria-hidden="true"[^>]*data-testid="merchant-side">[\s\S]*?49\.00 USDC<\/span><\/div><\/div><\/div>/.exec(html)?.[0] ?? ''
+    assert.ok(side, 'cluster is inside a wrapper that is hidden below xl and hidden from assistive tech')
+    const sideText = side.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    for (const needle of ['Your orders', 'Sample data', '#1041', 'Paid · card', '#1042', 'Canvas tote bag', '$49.00', 'Paid · crypto', 'payment.settled', 'Signed message received', 'Settled on Arc', '49.00 USDC']) {
+      assert.ok(sideText.includes(needle), needle)
+    }
+    // Arrives in the order the story happens: order list, webhook, settlement.
+    assert.ok(sideText.indexOf('Your orders') < sideText.indexOf('payment.settled') && sideText.indexOf('payment.settled') < sideText.indexOf('Settled on Arc'))
+    assert.ok(side.includes('pointer-events-none'))
+  })
+
+  void it('plays the cluster once, never on a loop, and never hides it from reduced-motion visitors', () => {
+    const side = /data-testid="merchant-side">[\s\S]*?49\.00 USDC/.exec(html)?.[0] ?? ''
+    assert.ok(!/animate-|infinite/.test(side), 'no looping animation')
+    assert.ok(side.includes('motion-reduce:opacity-100') && side.includes('motion-reduce:transition-none'))
+  })
 })

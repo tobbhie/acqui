@@ -17,6 +17,7 @@ import { useEffect } from 'react'
 import { NetworkArc, TokenUSDC } from '@web3icons/react'
 import { FeeCalculator } from '@/components/FeeCalculator'
 import { PaymentCapabilities } from '@/components/PaymentCapabilities'
+import { MerchantSide } from '@/components/landing/MerchantSide'
 import { usePublicConfig } from '@/lib/hooks'
 import { Link, scrollToHash } from '@/lib/route'
 import { CHECKOUT_WINDOW_SECONDS } from '@acqui/shared'
@@ -201,6 +202,7 @@ export function Landing() {
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
             <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl xl:max-w-none">Add crypto payments to the checkout you already have.</h2>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)] xl:max-w-none">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
+            <div className="hidden xl:block"><MerchantSide /></div>
           </div>
           <div className="hidden justify-self-end xl:block" data-testid="cart-mockup"><CartMockup /></div>
         </div>
