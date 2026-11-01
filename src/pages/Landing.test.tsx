@@ -24,7 +24,7 @@ void describe('landing: how it works', () => {
       assert.ok(found > at, `${step} appears, in order`)
       at = found
     }
-    assert.equal((section.match(/<li /g) ?? []).length, 5)
+    assert.equal((section.match(/<li[ >]/g) ?? []).length, 5)
     for (const chip of ['API + hosted checkout', 'Created from your backend', 'No customer signup', 'Onchain verification', 'USDC + webhook']) {
       assert.ok(text.includes(chip), chip)
     }
@@ -49,5 +49,31 @@ void describe('landing: how it works', () => {
     assert.match(mock, /aria-hidden="true"/)
     assert.ok(mock.includes('pointer-events-none'), 'it is not interactive')
     assert.ok(mock.includes('border-blue-600 bg-blue-50'), 'crypto is the selected option')
+  })
+
+  void it('marks the crypto row as the part Acqui adds, and shows the amount in USDC', () => {
+    assert.ok(mockText.includes('Powered by Acqui'))
+    assert.ok(mockText.includes('49.00 USDC'))
+    assert.ok(mock.includes('/acqui-icon.svg'))
+  })
+
+  void it('keeps the mockup crisp: no tilt and no constant drifting animation', () => {
+    assert.ok(!/rotate|float-slow/.test(mock))
+    assert.ok(mock.includes('pulse-soft'), 'one gentle pulse on the selected option')
+    assert.ok(!/text-\[10px\]|text-\[11px\] font-semibold uppercase tracking-\[0\.1em\] text-slate-400/.test(mock), 'no tiny pale labels')
+  })
+
+  void it('shows who owns each part with lane brackets and a numbered sequence on wide screens', () => {
+    const lanes = /<div aria-hidden="true" class="mt-14 hidden lg:block" data-testid="flow-lanes">[\s\S]*?<\/div><\/div>/.exec(html)?.[0] ?? ''
+    assert.ok(lanes, 'lane block is decorative and hidden below lg')
+    const laneText = lanes.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+    for (const label of ['In your store', 'Behind the scenes', 'Back in your systems']) assert.ok(laneText.includes(label), label)
+    assert.deepEqual([...lanes.matchAll(/ring-4[^>]*>(\d)<\/span>/g)].map((m) => m[1]), ['1', '2', '3', '4', '5'])
+  })
+
+  void it('keeps each card short enough to scan', () => {
+    for (const body of [...section.matchAll(/<p class="mt-2 flex-1[^>]*>([^<]*)<\/p>/g)].map((m) => m[1] ?? '')) {
+      assert.ok(body.length > 0 && body.length <= 110, `card copy too long (${body.length}): ${body}`)
+    }
   })
 })

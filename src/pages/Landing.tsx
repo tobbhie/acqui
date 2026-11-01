@@ -8,10 +8,8 @@ import {
   LayoutTemplate,
   Link2,
   ShieldCheck,
-  ShoppingBag,
   Store,
   UserRound,
-  Wallet,
   WalletCards,
   Webhook,
 } from 'lucide-react'
@@ -33,13 +31,20 @@ const CAPABILITIES = [
   { icon: Coins, title: 'Onchain settlement', body: 'Settle in USDC on Arc' },
 ]
 
-const PAYMENT_FLOW = [
-  { icon: Code2, who: 'Your team', title: 'Integrate Acqui', body: 'Add the API and hosted checkout to your existing website or application. Your products, orders and customer experience remain yours.', note: 'API + hosted checkout' },
-  { icon: Link2, who: 'Your backend', title: 'Create a payment', body: 'When a customer chooses crypto at checkout, your server creates an Acqui payment linked to the order amount and settlement address.', note: 'Created from your backend' },
-  { icon: UserRound, who: 'Your storefront', title: 'Customer completes checkout', body: 'The customer opens the secure payment page and sends USDC from a compatible wallet. They do not need an Acqui account.', note: 'No customer signup' },
-  { icon: ShieldCheck, who: 'Acqui, in the background', title: 'Acqui verifies the payment', body: 'Acqui monitors the payment on Arc, detects underpayments or overpayments, waits for confirmation and completes settlement onchain.', note: 'Onchain verification', behind: true },
-  { icon: WalletCards, who: 'Your systems', title: 'Your business gets paid', body: 'USDC is delivered to your business wallet, and Acqui notifies your backend through a signed webhook so your existing order flow can continue automatically.', note: 'USDC + webhook', live: true },
+type Lane = 'store' | 'acqui' | 'you'
+const PAYMENT_FLOW: readonly { icon: typeof Code2; who: string; title: string; body: string; note: string; lane: Lane }[] = [
+  { icon: Code2, who: 'Your team', title: 'Integrate Acqui', body: 'Add the API and hosted checkout to your existing site. Your products and orders stay yours.', note: 'API + hosted checkout', lane: 'store' },
+  { icon: Link2, who: 'Your backend', title: 'Create a payment', body: 'When a customer picks crypto, your server creates a payment for that order.', note: 'Created from your backend', lane: 'store' },
+  { icon: UserRound, who: 'Your storefront', title: 'Customer completes checkout', body: 'They open the secure payment page and send USDC from their wallet. No Acqui account.', note: 'No customer signup', lane: 'store' },
+  { icon: ShieldCheck, who: 'Acqui, in the background', title: 'Acqui verifies the payment', body: 'Acqui watches the payment on Arc, handles underpayments and overpayments, and settles onchain.', note: 'Onchain verification', lane: 'acqui' },
+  { icon: WalletCards, who: 'Your systems', title: 'Your business gets paid', body: 'USDC lands in your wallet and a signed webhook tells your backend to continue the order.', note: 'USDC + webhook', lane: 'you' },
 ]
+
+const LANES: Record<Lane, { card: string; chip: string; dot: string; bar: string }> = {
+  store: { card: 'border-[var(--border)] bg-white/60', chip: 'bg-slate-100 text-slate-700', dot: 'bg-slate-700', bar: 'border-slate-300 text-slate-700' },
+  acqui: { card: 'border-blue-200 bg-blue-50/70', chip: 'bg-blue-100 text-blue-800', dot: 'bg-blue-600', bar: 'border-blue-400 text-blue-800' },
+  you: { card: 'border-emerald-200 bg-emerald-50/70', chip: 'bg-emerald-100 text-emerald-800', dot: 'bg-emerald-600', bar: 'border-emerald-400 text-emerald-800' },
+}
 
 const FACTS = [
   `Each checkout lasts ${CHECKOUT_WINDOW_SECONDS / 60} minutes and uses a unique payment address.`,
@@ -47,43 +52,67 @@ const FACTS = [
   'The fee is the greater of 0.10 USDC and 0.1% of the payment.',
 ]
 
+function ToteBag() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-12 shrink-0" aria-hidden="true">
+      <rect width="48" height="48" rx="10" fill="#e8f1fb" />
+      <path d="M17 19c0-6 3-9 7-9s7 3 7 9" fill="none" stroke="#2867E8" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M12 19h24l2 19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#102C45" />
+      <path d="M15 24h18" stroke="#B8D0FC" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/** Decorative cart: three ways to pay on the merchant's own checkout, with crypto added by Acqui. No motion except one gentle pulse. */
 function CartMockup() {
-  const option = 'flex items-center gap-3 rounded-xl border px-3 py-2.5'
+  const option = 'flex items-center gap-3 rounded-xl border px-3 py-3'
   const radio = (on: boolean) => (
-    <span className={`ml-auto grid size-4 shrink-0 place-items-center rounded-full border ${on ? 'border-blue-600' : 'border-slate-300'}`}>
+    <span className={`ml-auto grid size-[18px] shrink-0 place-items-center rounded-full border-2 ${on ? 'border-blue-600' : 'border-slate-300'}`}>
       {on && <span className="size-2 rounded-full bg-blue-600" />}
     </span>
   )
   return (
-    <div aria-hidden="true" className="float-slow pointer-events-none w-[340px] select-none rounded-2xl border border-[var(--border)] bg-white p-5 shadow-[0_24px_60px_rgba(18,45,69,0.14)]">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">Your checkout</p>
+    <div aria-hidden="true" className="pointer-events-none w-[380px] select-none rounded-2xl border border-[var(--border)] bg-white p-6 shadow-[0_24px_60px_rgba(18,45,69,0.14)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Your checkout</p>
       <div className="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-        <span className="grid size-11 place-items-center rounded-lg bg-[#e8f1fb] text-blue-600"><ShoppingBag size={20} /></span>
+        <ToteBag />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[var(--ink)]">Canvas tote bag</p>
+          <p className="text-[15px] font-semibold text-[var(--ink)]">Canvas tote bag</p>
           <p className="text-xs text-slate-500">Qty 1</p>
         </div>
-        <p className="text-sm font-semibold text-[var(--ink)]">$49.00</p>
+        <p className="text-[15px] font-semibold text-[var(--ink)]">$49.00</p>
       </div>
-      <p className="mt-4 text-xs font-semibold text-slate-500">Pay with</p>
+      <p className="mt-5 text-xs font-semibold text-slate-600">Pay with</p>
       <div className="mt-2 space-y-2">
         <div className={`${option} border-slate-200 text-slate-700`}>
-          <CreditCard size={18} className="text-slate-400" /><span className="text-sm font-medium">Credit Card</span>{radio(false)}
+          <CreditCard size={20} className="shrink-0 text-slate-500" />
+          <span className="text-sm font-medium">Credit Card</span>{radio(false)}
         </div>
         <div className={`${option} border-slate-200 text-slate-700`}>
-          <Wallet size={18} className="text-slate-400" /><span className="text-sm font-medium">PayPal</span>{radio(false)}
+          <span className="grid size-5 shrink-0 place-items-center rounded-md bg-[#e6eefb] text-[12px] font-extrabold italic text-[#1c3d8f]">P</span>
+          <span className="text-sm font-medium">PayPal</span>{radio(false)}
         </div>
-        <div className={`${option} border-blue-600 bg-blue-50 text-[var(--ink)] ring-2 ring-blue-100`}>
-          <TokenUSDC variant="branded" size={22} />
-          <span className="text-sm font-semibold">Pay with Crypto</span>
-          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700">USDC</span>
+        <div className={`${option} pulse-soft border-blue-600 bg-blue-50 text-[var(--ink)] ring-2 ring-blue-100`}>
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-white shadow-sm"><TokenUSDC variant="branded" size={26} /></span>
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              Pay with Crypto
+              <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-blue-800">USDC</span>
+            </p>
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-blue-800">
+              49.00 USDC
+              <span aria-hidden className="text-blue-300">·</span>
+              <img src="/acqui-icon.svg" alt="" width={11} height={12} className="h-3 w-auto" />
+              Powered by Acqui
+            </p>
+          </div>
           {radio(true)}
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-        <span className="text-slate-500">Total</span><span className="font-semibold text-[var(--ink)]">$49.00</span>
+      <div className="mt-5 flex items-baseline justify-between border-t border-slate-100 pt-4 text-sm">
+        <span className="text-slate-600">Total</span><span className="text-base font-semibold text-[var(--ink)]">$49.00</span>
       </div>
-      <div className="mt-3 rounded-full bg-[var(--accent)] py-3 text-center text-sm font-semibold text-white">Complete Order</div>
+      <div className="mt-3 rounded-full bg-[var(--accent)] py-3.5 text-center text-sm font-semibold text-white">Complete Order</div>
     </div>
   )
 }
@@ -167,29 +196,43 @@ export function Landing() {
 
       <section id="how-it-works" className="scroll-mt-24 border-b border-[var(--border)] py-20" aria-labelledby="payment-flow-heading">
         {/* From xl up the heading sits beside a decorative cart; below that the space is not enough, so it is hidden. */}
-        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-center xl:gap-12">
+        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_380px] xl:items-start xl:gap-12">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
-            <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">Add crypto payments to the checkout you already have.</h2>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
+            <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl xl:max-w-none">Add crypto payments to the checkout you already have.</h2>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)] xl:max-w-none">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
           </div>
           <div className="hidden justify-self-end xl:block" data-testid="cart-mockup"><CartMockup /></div>
         </div>
 
-        <ol className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {/* Who owns each part of the flow, and the sequence, on wide screens. Decorative: the list below carries the content. */}
+        <div aria-hidden="true" className="mt-14 hidden lg:block" data-testid="flow-lanes">
+          <div className="grid grid-cols-5 gap-4 text-xs font-semibold uppercase tracking-[0.08em]">
+            <p className={`col-span-3 border-b-2 pb-2 ${LANES.store.bar}`}>In your store</p>
+            <p className={`border-b-2 pb-2 ${LANES.acqui.bar}`}>Behind the scenes</p>
+            <p className={`border-b-2 pb-2 ${LANES.you.bar}`}>Back in your systems</p>
+          </div>
+          <div className="relative mt-5 grid grid-cols-5 gap-4">
+            <span className="absolute inset-x-[10%] top-1/2 h-px -translate-y-1/2 bg-slate-300" />
+            {PAYMENT_FLOW.map((item, index) => (
+              <span key={item.title} className={`relative mx-auto grid size-8 place-items-center rounded-full text-xs font-bold text-white ring-4 ring-[#fbf9f6] ${LANES[item.lane].dot}`}>{index + 1}</span>
+            ))}
+          </div>
+        </div>
+
+        <ol className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {PAYMENT_FLOW.map((item, index) => (
-            <li key={item.title} className="relative">
-              <div className={`flex h-full flex-col rounded-2xl border p-6 ${item.behind ? 'border-blue-200 bg-blue-50/70' : item.live ? 'border-emerald-200 bg-emerald-50/70' : 'border-[var(--border)] bg-white/60'}`}>
+            <li key={item.title}>
+              <div className={`flex h-full flex-col rounded-2xl border p-6 ${LANES[item.lane].card}`}>
                 <div className="flex items-center justify-between">
                   <span className="grid size-11 place-items-center rounded-2xl bg-white text-blue-600 shadow-sm"><item.icon size={22} aria-hidden /></span>
-                  <span className="mono text-xs font-semibold text-[var(--subtle)]" aria-hidden>0{index + 1}</span>
+                  <span className="mono text-xs font-semibold text-[var(--muted)] lg:hidden" aria-hidden>0{index + 1}</span>
                 </div>
-                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">{item.who}</p>
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">{item.who}</p>
                 <h3 className="display mt-1 text-lg font-semibold leading-snug"><span className="sr-only">Step {index + 1}: </span>{item.title}</h3>
-                <p className="mt-2 flex-1 text-sm leading-6 text-[var(--ink-2)]">{item.body}</p>
-                <span className={`mt-5 inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${item.behind ? 'bg-blue-100 text-blue-700' : item.live ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{item.note}</span>
+                <p className="mt-2 flex-1 text-[15px] leading-6 text-[var(--ink-2)]">{item.body}</p>
+                <span className={`mt-5 inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold ${LANES[item.lane].chip}`}>{item.note}</span>
               </div>
-              {index < PAYMENT_FLOW.length - 1 && <ArrowRight className="absolute -right-4 top-1/2 z-10 hidden -translate-y-1/2 rounded-full bg-white p-1 text-[var(--ink)] lg:block" size={22} aria-hidden />}
             </li>
           ))}
         </ol>

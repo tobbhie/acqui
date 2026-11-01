@@ -37,12 +37,12 @@ body {
 .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; }
 .mono { font-family: 'JetBrains Mono', Menlo, monospace; }
 
-/* Slow drift for the decorative cart on the landing page. */
-@keyframes acqui-float {
-  0%, 100% { transform: translateY(0) rotate(1.5deg); }
-  50% { transform: translateY(-10px) rotate(1.5deg); }
+/* One gentle pulse on the selected "Pay with Crypto" row of the landing page cart. */
+@keyframes acqui-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  50% { box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.16); }
 }
-.float-slow { animation: acqui-float 7s ease-in-out infinite; transform: rotate(1.5deg); }
+.pulse-soft { animation: acqui-pulse 2.4s ease-in-out 3; }
 @media (prefers-reduced-motion: reduce) {
-  .float-slow { animation: none; }
+  .pulse-soft { animation: none; }
 }
