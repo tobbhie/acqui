@@ -4,11 +4,14 @@ import {
   CheckCircle2,
   Code2,
   Coins,
+  CreditCard,
   LayoutTemplate,
   Link2,
   ShieldCheck,
+  ShoppingBag,
   Store,
   UserRound,
+  Wallet,
   WalletCards,
   Webhook,
 } from 'lucide-react'
@@ -43,6 +46,47 @@ const FACTS = [
   'Only verified USDC on Arc settlement marks a payment as settled.',
   'The fee is the greater of 0.10 USDC and 0.1% of the payment.',
 ]
+
+function CartMockup() {
+  const option = 'flex items-center gap-3 rounded-xl border px-3 py-2.5'
+  const radio = (on: boolean) => (
+    <span className={`ml-auto grid size-4 shrink-0 place-items-center rounded-full border ${on ? 'border-blue-600' : 'border-slate-300'}`}>
+      {on && <span className="size-2 rounded-full bg-blue-600" />}
+    </span>
+  )
+  return (
+    <div aria-hidden="true" className="float-slow pointer-events-none w-[340px] select-none rounded-2xl border border-[var(--border)] bg-white p-5 shadow-[0_24px_60px_rgba(18,45,69,0.14)]">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">Your checkout</p>
+      <div className="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+        <span className="grid size-11 place-items-center rounded-lg bg-[#e8f1fb] text-blue-600"><ShoppingBag size={20} /></span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-[var(--ink)]">Canvas tote bag</p>
+          <p className="text-xs text-slate-500">Qty 1</p>
+        </div>
+        <p className="text-sm font-semibold text-[var(--ink)]">$49.00</p>
+      </div>
+      <p className="mt-4 text-xs font-semibold text-slate-500">Pay with</p>
+      <div className="mt-2 space-y-2">
+        <div className={`${option} border-slate-200 text-slate-700`}>
+          <CreditCard size={18} className="text-slate-400" /><span className="text-sm font-medium">Credit Card</span>{radio(false)}
+        </div>
+        <div className={`${option} border-slate-200 text-slate-700`}>
+          <Wallet size={18} className="text-slate-400" /><span className="text-sm font-medium">PayPal</span>{radio(false)}
+        </div>
+        <div className={`${option} border-blue-600 bg-blue-50 text-[var(--ink)] ring-2 ring-blue-100`}>
+          <TokenUSDC variant="branded" size={22} />
+          <span className="text-sm font-semibold">Pay with Crypto</span>
+          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-blue-700">USDC</span>
+          {radio(true)}
+        </div>
+      </div>
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
+        <span className="text-slate-500">Total</span><span className="font-semibold text-[var(--ink)]">$49.00</span>
+      </div>
+      <div className="mt-3 rounded-full bg-[var(--accent)] py-3 text-center text-sm font-semibold text-white">Complete Order</div>
+    </div>
+  )
+}
 
 function SettlementGraphic() {
   return (
@@ -122,9 +166,15 @@ export function Landing() {
       </section>
 
       <section id="how-it-works" className="scroll-mt-24 border-b border-[var(--border)] py-20" aria-labelledby="payment-flow-heading">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
-        <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">Add crypto payments to the checkout you already have.</h2>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
+        {/* From xl up the heading sits beside a decorative cart; below that the space is not enough, so it is hidden. */}
+        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-center xl:gap-12">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">How it works</p>
+            <h2 id="payment-flow-heading" className="display mt-3 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl">Add crypto payments to the checkout you already have.</h2>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--ink-2)]">Integrate Acqui once through the API or hosted checkout. Your customers pay from your website, while Acqui handles payment verification and USDC settlement in the background.</p>
+          </div>
+          <div className="hidden justify-self-end xl:block" data-testid="cart-mockup"><CartMockup /></div>
+        </div>
 
         <ol className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {PAYMENT_FLOW.map((item, index) => (

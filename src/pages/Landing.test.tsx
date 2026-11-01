@@ -10,6 +10,9 @@ const html = renderToString(<QueryClientProvider client={new QueryClient()}><Lan
 const section = /<section id="how-it-works"[\s\S]*?<\/section>/.exec(html)?.[0] ?? ''
 const text = section.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
 
+const mock = /<div class="hidden justify-self-end xl:block" data-testid="cart-mockup">[\s\S]*?Complete Order<\/div><\/div><\/div>/.exec(html)?.[0] ?? ''
+const mockText = mock.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
+
 void describe('landing: how it works', () => {
   void it('presents Acqui as infrastructure behind the merchant checkout, in five steps', () => {
     assert.ok(section, 'section with id how-it-works exists')
@@ -35,5 +38,16 @@ void describe('landing: how it works', () => {
   void it('no longer starts the story at the customer', () => {
     assert.ok(!text.includes('From customer payment to business settlement'))
     assert.ok(text.indexOf('Integrate Acqui') < text.indexOf('Customer completes checkout'))
+  })
+
+  void it('floats a decorative cart beside the heading on wide screens only', () => {
+    assert.ok(mock, 'mockup is rendered inside a wrapper that is hidden below xl')
+    for (const needle of ['Your checkout', 'Canvas tote bag', '$49.00', 'Credit Card', 'PayPal', 'Pay with Crypto', 'USDC', 'Complete Order']) {
+      assert.ok(mockText.includes(needle), needle)
+    }
+    assert.ok(mock.indexOf('Credit Card') < mock.indexOf('PayPal') && mock.indexOf('PayPal') < mock.indexOf('Pay with Crypto'))
+    assert.match(mock, /aria-hidden="true"/)
+    assert.ok(mock.includes('pointer-events-none'), 'it is not interactive')
+    assert.ok(mock.includes('border-blue-600 bg-blue-50'), 'crypto is the selected option')
   })
 })

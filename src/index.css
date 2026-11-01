@@ -36,3 +36,13 @@ body {
 
 .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.03em; }
 .mono { font-family: 'JetBrains Mono', Menlo, monospace; }
+
+/* Slow drift for the decorative cart on the landing page. */
+@keyframes acqui-float {
+  0%, 100% { transform: translateY(0) rotate(1.5deg); }
+  50% { transform: translateY(-10px) rotate(1.5deg); }
+}
+.float-slow { animation: acqui-float 7s ease-in-out infinite; transform: rotate(1.5deg); }
+@media (prefers-reduced-motion: reduce) {
+  .float-slow { animation: none; }
+}
